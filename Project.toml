@@ -1,0 +1,13 @@
+name = "Muesli"
+uuid = "15d96d4e-a55c-433f-b8eb-a88007b7373b"
+authors = ["Henrik Jakob <jakob@ibb.uni-stuttgart.de> and contributors"]
+version = "0.1.0-dev"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
