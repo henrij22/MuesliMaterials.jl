@@ -38,4 +38,7 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
+        with:
+          localregistry: |
+            https://github.com/henrij22/JuliaRegistry.git
       - uses: julia-actions/julia-runtest@v1
