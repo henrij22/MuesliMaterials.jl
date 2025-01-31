@@ -1,5 +1,12 @@
 module Muesli
 
-# Write your package code here.
+using CxxWrap
+using MuesliMaterialsWrapper_jll
+
+@wrapmodule(() -> libjlmuesli)
+
+function __init__()
+    @initcxx
+end
 
 end
