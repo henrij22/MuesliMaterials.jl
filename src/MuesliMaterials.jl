@@ -1,4 +1,4 @@
-module Muesli
+module MuesliMaterials
 
 using CxxWrap
 using MuesliMaterialsWrapper_jll

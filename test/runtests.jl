@@ -1,9 +1,9 @@
-using Muesli
+using MuesliMaterials
 using Test
 
-@testset "Muesli.jl" begin
-    mat = Muesli.ElasticIsotropicMaterial(1000, 100)
-    mp = Muesli.ElasticIsotropicMP(mat)
+@testset "MuesliMaterials.jl" begin
+    mat = MuesliMaterials.ElasticIsotropicMaterial(1000, 100)
+    mp = MuesliMaterials.ElasticIsotropicMP(mat)
 
     C = [0.600872 -0.179083 0
         -0.179083 0.859121 0
@@ -13,8 +13,8 @@ using Test
     σ = zeros(3, 3)
     ℂ = zeros(3, 3, 3, 3)
 
-    Muesli.stress!(mp, σ)
-    Muesli.tangentTensor!(mp, ℂ)
+    MuesliMaterials.stress!(mp, σ)
+    MuesliMaterials.tangentTensor!(mp, ℂ)
 
     @test all(σ != 0.0)
     @test all(ℂ != 0.0)
