@@ -59,4 +59,10 @@
 
     @test_throws "Input has to be a 3 vector." Ivector(rand(4))
     @test_throws "Input has to be a 3 x 3 matrix." Itensor(rand(4, 4))
+
+    # Testing slicing
+    @test iv[1:2] ≈ v[1:2]
+    @test it[1:2, 1:2] ≈ t[1:2, 1:2]
+    @test ist[1:2, 1:2] ≈ ts[1:2, 1:2]
+    @test it4[1:2, 1:2, 1:2, 1:2] ≈ T[1:2, 1:2, 1:2, 1:2]
 end
