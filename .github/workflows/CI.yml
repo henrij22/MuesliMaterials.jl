@@ -10,7 +10,7 @@ concurrency:
   # Skip intermediate builds: always.
   # Cancel intermediate builds: only if it is a pull request build.
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+  cancel-in-progress: true
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -32,14 +32,16 @@ jobs:
           # - macOS-latest
         arch:
           - x64
-        include:
-          - os: windows-latest
-            version: '1'
-            arch: x64
-          - os: macOS-latest
-            version: '1'
-            arch: aarch64
-            
+          # - arm64
+        # exclude:
+        #   # For macOS, only allow arm64.
+        #   - os: macOS-latest
+        #     arch: x64
+        #   # For ubuntu and windows, only allow x64.
+        #   - os: ubuntu-latest
+        #     arch: arm64
+        #   - os: windows-latest
+        #     arch: arm64
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
