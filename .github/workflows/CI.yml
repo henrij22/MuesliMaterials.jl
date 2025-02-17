@@ -29,19 +29,17 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-          - macOS-latest
+          # - macOS-latest
         arch:
           - x64
-          - arm64
-        exclude:
-          # For macOS, only allow arm64.
-          - os: macOS-latest
-            arch: x64
-          # For ubuntu and windows, only allow x64.
-          - os: ubuntu-latest
-            arch: arm64
+        include:
           - os: windows-latest
-            arch: arm64
+            version: '1'
+            arch: x64
+          - os: macOS-latest
+            version: '1'
+            arch: aarch64
+            
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
