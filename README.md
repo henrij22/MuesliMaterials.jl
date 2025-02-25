@@ -1,6 +1,7 @@
 # Muesli
 
 [![Build Status](https://github.com/henrij22/Muesli.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/henrij22/Muesli.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/henrij22/MuesliMaterials.jl/graph/badge.svg?token=O5JKOFDWX1)](https://codecov.io/gh/henrij22/MuesliMaterials.jl)
 
 This is a wrapper for the Julia Programming Language of the MUESLI library (Material UnivErSal LIbrary), a C++ library for modeling material response, developed at IMDEA Materials Institute, Madrid (Spain).See [Homepage](https://materials.imdea.org/muesli/) and [Repo](https://bitbucket.org/ignromero/muesli/src/master/).
 The developer of this wrapper library is is not affiliated with IMDEA.
