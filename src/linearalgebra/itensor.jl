@@ -33,7 +33,7 @@ function Base.setindex!(v::Itensor, vals, i::Int, j::UnitRange{Int})
     return v
 end
 function Base.setindex!(v::Itensor, vals, i::UnitRange{Int}, j::UnitRange{Int})
-    @assert size(vals)==(length(i), length(j)) "Dimension mismatch in assignment"
+    @assert Base.size(vals)==(length(i), length(j)) "Dimension mismatch in assignment"
     for (ii_offset, ii) in enumerate(i)
         for (jj_offset, jj) in enumerate(j)
             v[ii, jj] = vals[ii_offset, jj_offset]

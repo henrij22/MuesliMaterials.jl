@@ -65,4 +65,13 @@
     @test it[1:2, 1:2] ≈ t[1:2, 1:2]
     @test ist[1:2, 1:2] ≈ ts[1:2, 1:2]
     @test it4[1:2, 1:2, 1:2, 1:2] ≈ T[1:2, 1:2, 1:2, 1:2]
+
+    @test it[1:2, 1] ≈ t[1:2, 1]
+    @test it[1, 1:2] ≈ t[1, 1:2]
+    @test ist[1, 1:2] ≈ ts[1, 1:2]
+
+    # Now we are testing setIndex Operations
+    it[1:2, 1:2] = t[1:2, 1:2]
+    it[1:2, 1] = t[1:2, 1]
+    it[1, 1:2] = t[1, 1:2]
 end

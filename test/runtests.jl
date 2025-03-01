@@ -3,6 +3,7 @@ using Tensors
 using Test
 
 @testset verbose=true "MuesliMaterials.jl" begin
-    include("testtensors.jl")
+    include("testensors.jl")
     include("testsmallstrain.jl")
+    include("Aqua.jl")
 end
