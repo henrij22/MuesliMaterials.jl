@@ -12,7 +12,7 @@ The developer of this wrapper library is not affiliated with IMDEA in any form.
 
 Currently the following modules have bindings:
 
-- FiniteStrain models (without plasticity etc.)
+- FiniteStrain models (hyperelastic and fininte plasticity available)
 - SmallStrain models (including plasticity, viscoelasticity and damage models)
 - Tensor and Vector classes
 
