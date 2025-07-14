@@ -1,4 +1,4 @@
-@testset "Test Small Strain" begin
+@testitem "Test Small Strain" begin
     mat = ElasticIsotropicMaterial(1000, 100)
     mp = ElasticIsotropicMP(mat)
 

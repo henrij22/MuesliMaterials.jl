@@ -1,6 +1,7 @@
 module TensorsExt
 
-using MuesliMaterials
+# using MuesliMaterials
+import MuesliMaterials: Ivector, Itensor, Istensor, Itensor4
 
 using Tensors
 
