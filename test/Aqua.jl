@@ -1,6 +1,7 @@
-using Aqua
 
-@testset "Aqua.jl" begin
+@testitem "Aqua.jl" begin
+    using Aqua
+
     Aqua.test_all(
         MuesliMaterials;
         deps_compat = (check_extras = false),

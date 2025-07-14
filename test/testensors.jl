@@ -1,4 +1,6 @@
-@testset "Test Tensors" begin
+@testitem "Test Tensors" begin
+    using Tensors
+
     v = rand(3)
     t = rand(3, 3)
     ts = 0.5 * (t' + t)
@@ -28,6 +30,7 @@
         @test v[i] ≈ iv[i]
     end
     for i in 1:3, j in 1:3
+
         @test t[i, j] ≈ it[i, j]
         @test ts[i, j] ≈ ist[i, j]
     end

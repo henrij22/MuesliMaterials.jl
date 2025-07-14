@@ -1,9 +1,5 @@
-using MuesliMaterials
-using Tensors
-using Test
+using TestItems
+using TestItemRunner
 
-@testset verbose=true "MuesliMaterials.jl" begin
-    include("testensors.jl")
-    include("testsmallstrain.jl")
-    include("Aqua.jl")
-end
+# Run all test items
+@run_package_tests
