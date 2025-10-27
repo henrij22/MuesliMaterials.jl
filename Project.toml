@@ -1,7 +1,7 @@
 name = "MuesliMaterials"
 uuid = "15d96d4e-a55c-433f-b8eb-a88007b7373b"
 authors = ["Henrik Jakob <jakob@ibb.uni-stuttgart.de> and contributors"]
-version = "0.1.3"
+version = "0.1.4"
 
 [deps]
 CxxWrap = "1f15a43c-97ca-5a2a-ae31-89f07a497df4"
