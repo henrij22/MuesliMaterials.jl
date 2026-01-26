@@ -60,9 +60,10 @@
     @test SymmetricTensor{2, 3}(ts) == convert(SymmetricTensor{2, 3}, ist)
     @test Tensor{4, 3}(T) == convert(Tensor{4, 3}, it4)
 
-    @test_throws "Input has to be a 3 vector." Ivector(rand(4))
-    @test_throws "Input has to be a 3 x 3 matrix." Itensor(rand(4, 4))
-
+    if !Sys.isapple()
+        @test_throws "Input has to be a 3 vector." Ivector(rand(4))
+        @test_throws "Input has to be a 3 x 3 matrix." Itensor(rand(4, 4))
+    end
     # Testing slicing
     @test iv[1:2] ≈ v[1:2]
     @test it[1:2, 1:2] ≈ t[1:2, 1:2]

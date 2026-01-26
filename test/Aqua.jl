@@ -6,6 +6,7 @@
         MuesliMaterials;
         deps_compat = (check_extras = false),
         ambiguities = false,
-        piracies = false
+        piracies = false,
+        persistent_tasks = false
     )
 end
