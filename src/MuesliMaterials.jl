@@ -18,4 +18,7 @@ include("linearalgebra/ivector.jl")
 include("linearalgebra/itensor.jl")
 include("linearalgebra/itensor4.jl")
 
+# Documentation
+include("stubs.jl")
+
 end

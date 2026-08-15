@@ -1,0 +1,10 @@
+LICENSE
+README.md
+CITATION.bib
+Project.toml
+Manifest.toml
+./src/MuesliMaterials.jl
+./ext/TensorsExt.jl
+./test/Aqua.jl
+.JuliaFormatter.toml
+LocalPreferences.toml
