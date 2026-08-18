@@ -1,4 +1,3 @@
-
 @testitem "Aqua.jl" begin
     using Aqua
 

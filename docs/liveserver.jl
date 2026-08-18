@@ -25,5 +25,6 @@ LiveServer.servedocs(;
     include_dirs = [
         # Watch the src and ext folder so docstrings can be Revise'd
         joinpath(repo_root, "src"),
-        joinpath(repo_root, "ext")
-    ])
+        joinpath(repo_root, "ext"),
+    ]
+)

@@ -3,8 +3,10 @@
 
     props = properties("young" => 210000.0, "poisson" => 0.3)
 
-    for (name, matT, mpT) in (("NeoHooke", NeoHookeMaterial, NeoHookeMP),
-        ("SVK", SVKMaterial, SVKMP))
+    for (name, matT, mpT) in (
+            ("NeoHooke", NeoHookeMaterial, NeoHookeMP),
+            ("SVK", SVKMaterial, SVKMP),
+        )
         @testset "$name" begin
             mat = matT(props)
             @test MuesliMaterials.check(mat)
@@ -14,9 +16,9 @@
 
             P = Itensor()
             MuesliMaterials.firstPiolaKirchhoffStress!(mp, P)
-            @test all(abs.(mat3(P)) .< 1e-8)
+            @test all(abs.(mat3(P)) .< 1.0e-8)
 
-            @test MuesliMaterials.storedEnergy(mp) ≈ 0.0 atol = 1e-8
+            @test MuesliMaterials.storedEnergy(mp) ≈ 0.0 atol = 1.0e-8
         end
     end
 end
@@ -27,8 +29,10 @@ end
     props = properties("young" => 210000.0, "poisson" => 0.3)
     F = [1.05 0.02 0.0; 0.0 0.98 0.01; 0.0 0.0 1.01]
 
-    for (name, matT, mpT) in (("NeoHooke", NeoHookeMaterial, NeoHookeMP),
-        ("SVK", SVKMaterial, SVKMP))
+    for (name, matT, mpT) in (
+            ("NeoHooke", NeoHookeMaterial, NeoHookeMP),
+            ("SVK", SVKMaterial, SVKMP),
+        )
         @testset "$name" begin
             mp = mpT(matT(props))
             MuesliMaterials.updateCurrentState(mp, 1.0, Itensor(F))
@@ -37,7 +41,7 @@ end
             MuesliMaterials.firstPiolaKirchhoffStress!(mp, P)
             Pnum = Itensor()
             MuesliMaterials.firstPiolaKirchhoffStressNumerical!(mp, Pnum)
-            @test mat3(P)≈mat3(Pnum) rtol=1e-5 atol=1e-6
+            @test mat3(P) ≈ mat3(Pnum) rtol = 1.0e-5 atol = 1.0e-6
 
             # secondPiolaKirchhoffStressNumerical is broken upstream: muesli's
             # finiteStrainMP::secondPiolaKirchhoffStressNumerical assigns an itensor into
@@ -48,7 +52,7 @@ end
             MuesliMaterials.secondPiolaKirchhoffStress!(mp, S)
             Snum = Istensor()
             MuesliMaterials.secondPiolaKirchhoffStressNumerical!(mp, Snum)
-            @test_skip mat3(S)≈mat3(Snum) rtol=1e-5 atol=1e-6
+            @test_skip mat3(S) ≈ mat3(Snum) rtol = 1.0e-5 atol = 1.0e-6
         end
     end
 end
@@ -79,15 +83,15 @@ end
     end
 
     @testset "P = F S" begin
-        @test Pm ≈ F * Sm rtol = 1e-8
+        @test Pm ≈ F * Sm rtol = 1.0e-8
     end
 
     @testset "τ = J σ" begin
-        @test τm ≈ J .* σm rtol = 1e-8
+        @test τm ≈ J .* σm rtol = 1.0e-8
     end
 
     @testset "τ = P Fᵀ" begin
-        @test τm ≈ Pm * F' rtol = 1e-8
+        @test τm ≈ Pm * F' rtol = 1.0e-8
     end
 end
 
@@ -116,9 +120,9 @@ end
     S₁, σ₁, W₁ = stresses(F)
     S₂, σ₂, W₂ = stresses(Q * F)
 
-    @test S₂ ≈ S₁ rtol = 1e-8                 # S is unaffected by a rotation
-    @test σ₂ ≈ Q * σ₁ * Q' rtol = 1e-8        # σ rotates with the body
-    @test W₂ ≈ W₁ rtol = 1e-10                # the energy is unchanged
+    @test S₂ ≈ S₁ rtol = 1.0e-8                 # S is unaffected by a rotation
+    @test σ₂ ≈ Q * σ₁ * Q' rtol = 1.0e-8        # σ rotates with the body
+    @test W₂ ≈ W₁ rtol = 1.0e-10                # the energy is unchanged
 end
 
 @testitem "Finite strain: stored energy grows away from the undeformed state" begin
@@ -132,14 +136,14 @@ end
         MuesliMaterials.storedEnergy(mp)
     end
 
-    @test energy(I3) ≈ 0.0 atol = 1e-8
-    for s in (1.01, 1.05, 1.10)
+    @test energy(I3) ≈ 0.0 atol = 1.0e-8
+    for s in (1.01, 1.05, 1.1)
         @test energy(s * I3) > 0
         @test energy(Diagonal3(s, 1.0, 1.0)) > 0
     end
 
     @testset "energy increases monotonically with stretch" begin
-        e = [energy(Diagonal3(s, 1.0, 1.0)) for s in (1.01, 1.02, 1.05, 1.10)]
+        e = [energy(Diagonal3(s, 1.0, 1.0)) for s in (1.01, 1.02, 1.05, 1.1)]
         @test issorted(e)
     end
 end
@@ -169,9 +173,11 @@ end
     mp = NeoHookeMP(NeoHookeMaterial(props))
     MuesliMaterials.updateCurrentState(mp, 1.0, Itensor(F))
 
-    for (name, f) in (("convectedTangent!", MuesliMaterials.convectedTangent!),
-        ("materialTangent!", MuesliMaterials.materialTangent!),
-        ("spatialTangent!", MuesliMaterials.spatialTangent!))
+    for (name, f) in (
+            ("convectedTangent!", MuesliMaterials.convectedTangent!),
+            ("materialTangent!", MuesliMaterials.materialTangent!),
+            ("spatialTangent!", MuesliMaterials.spatialTangent!),
+        )
         @testset "$name" begin
             C = Itensor4()
             f(mp, C)
@@ -186,7 +192,7 @@ end
         MuesliMaterials.convectedTangent!(mp, C)
         got = ten4(C)
         for i in 1:3, j in 1:3, k in 1:3, l in 1:3
-            @test got[i, j, k, l] ≈ got[k, l, i, j] atol = 1e-6
+            @test got[i, j, k, l] ≈ got[k, l, i, j] atol = 1.0e-6
         end
     end
 end

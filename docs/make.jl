@@ -25,14 +25,14 @@ makedocs(;
             "Examples overview" => "02_examples/00_index.md",
             "02_examples/01_tensors.md",
             "02_examples/02_smallstrain.md",
-            "02_examples/03_finitestrain.md"
+            "02_examples/03_finitestrain.md",
         ],
         "API Reference" => [
             "Reference overview" => "01_api_reference/00_index.md",
             "01_api_reference/01_tensors.md",
             "01_api_reference/02_materials.md",
-            "01_api_reference/03_materialpoints.md"
-        ]
+            "01_api_reference/03_materialpoints.md",
+        ],
     ]
 )
 
@@ -42,7 +42,7 @@ if !liveserver
         push_preview = true,
         versions = [
             "stable" => "v^",
-            "dev" => "dev"
+            "dev" => "dev",
         ]
     )
 end

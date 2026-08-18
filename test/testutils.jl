@@ -33,9 +33,9 @@ end
 
 """Determinant of a 3x3 matrix, without pulling in LinearAlgebra."""
 function det3(a)
-    a[1, 1] * (a[2, 2] * a[3, 3] - a[2, 3] * a[3, 2]) -
-    a[1, 2] * (a[2, 1] * a[3, 3] - a[2, 3] * a[3, 1]) +
-    a[1, 3] * (a[2, 1] * a[3, 2] - a[2, 2] * a[3, 1])
+    return a[1, 1] * (a[2, 2] * a[3, 3] - a[2, 3] * a[3, 2]) -
+        a[1, 2] * (a[2, 1] * a[3, 3] - a[2, 3] * a[3, 1]) +
+        a[1, 3] * (a[2, 1] * a[3, 2] - a[2, 2] * a[3, 1])
 end
 
 """A 3x3 diagonal matrix."""
