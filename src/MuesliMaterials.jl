@@ -4,10 +4,10 @@ using CxxWrap
 using MuesliMaterialsWrapper_jll
 using Tullio
 
-@wrapmodule(()->libjlmuesli)
+@wrapmodule(() -> libjlmuesli)
 
 function __init__()
-    @initcxx
+    return @initcxx
 end
 
 export Itensor, Istensor, Itensor4, Ivector
@@ -17,5 +17,8 @@ export ElasticIsotropicMP, NeoHookeMP, SVKMP, YeohMP
 include("linearalgebra/ivector.jl")
 include("linearalgebra/itensor.jl")
 include("linearalgebra/itensor4.jl")
+
+# Documentation
+include("stubs.jl")
 
 end

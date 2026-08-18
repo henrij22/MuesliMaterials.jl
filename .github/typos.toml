@@ -1,0 +1,9 @@
+[default.extend-identifiers]
+# MUESLI capitalises its own name as "Material UnivErSal LIbrary"
+LIbrary = "LIbrary"
+# `ist` is the conventional short name for an Istensor in the tests
+ist = "ist"
+
+[default.extend-words]
+LIbrary = "LIbrary"
+ist = "ist"

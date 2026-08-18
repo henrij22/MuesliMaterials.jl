@@ -1,4 +1,6 @@
-# Muesli
+# MuesliMaterials.jl
+
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://henrij22.github.io/MuesliMaterials.jl/dev/)
 
 [![Build Status](https://github.com/henrij22/Muesli.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/henrij22/Muesli.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/henrij22/MuesliMaterials.jl/graph/badge.svg?token=O5JKOFDWX1)](https://codecov.io/gh/henrij22/MuesliMaterials.jl)
@@ -15,6 +17,17 @@ Currently the following modules have bindings:
 - FiniteStrain models (hyperelastic and fininte plasticity available)
 - SmallStrain models (including plasticity, viscoelasticity and damage models)
 - Tensor and Vector classes
+
+## Documentation
+
+The [documentation](https://henrij22.github.io/MuesliMaterials.jl/dev/) has runnable examples
+for the tensor types, small strain materials and finite strain materials, plus a full API
+reference. Build it locally with:
+
+```bash
+julia --project=docs -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+julia --project=docs docs/make.jl liveserver
+```
 
 ### Naming convention
 

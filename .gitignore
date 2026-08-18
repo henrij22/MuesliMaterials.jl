@@ -30,3 +30,6 @@ Manifest.toml
 
 matrix/
 .vscode
+
+# Local JLL overrides used when testing against a locally built libjlmuesli
+LocalPreferences.toml

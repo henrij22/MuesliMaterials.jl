@@ -1,4 +1,3 @@
-
 Base.IndexStyle(::Itensor) = IndexLinear()
 Base.getindex(v::Itensor, i::Int, j::Int) = cxxgetindex(v, i, j)[]
 
@@ -14,11 +13,11 @@ function Base.getindex(v::Itensor, i::UnitRange{Int}, j::UnitRange{Int})
 end
 
 function Base.setindex!(v::Itensor, val, i::Int, j::Int)
-    cxxsetindex!(v, convert(Float64, val), i, j)
+    return cxxsetindex!(v, convert(Float64, val), i, j)
 end
 
 function Base.setindex!(v::Itensor, vals, i::UnitRange{Int}, j::Int)
-    @assert length(vals)==length(i) "Length mismatch in assignment"
+    @assert length(vals) == length(i) "Length mismatch in assignment"
     for (offset, ii) in enumerate(i)
         v[ii, j] = vals[offset]
     end
@@ -26,14 +25,14 @@ function Base.setindex!(v::Itensor, vals, i::UnitRange{Int}, j::Int)
 end
 
 function Base.setindex!(v::Itensor, vals, i::Int, j::UnitRange{Int})
-    @assert length(vals)==length(j) "Length mismatch in assignment"
+    @assert length(vals) == length(j) "Length mismatch in assignment"
     for (offset, jj) in enumerate(j)
         v[i, jj] = vals[offset]
     end
     return v
 end
 function Base.setindex!(v::Itensor, vals, i::UnitRange{Int}, j::UnitRange{Int})
-    @assert Base.size(vals)==(length(i), length(j)) "Dimension mismatch in assignment"
+    @assert Base.size(vals) == (length(i), length(j)) "Dimension mismatch in assignment"
     for (ii_offset, ii) in enumerate(i)
         for (jj_offset, jj) in enumerate(j)
             v[ii, jj] = vals[ii_offset, jj_offset]
@@ -65,6 +64,18 @@ function Base.show(io::IO, mime::MIME"text/plain", tensor::Itensor)
     for i in 1:3
         Base.print(io, "$(tensor[i, 1]) $(tensor[i, 2]) $(tensor[i, 3])\n")
     end
+    return
 end
 
 Base.convert(::Type{T}, x::Itensor) where {T <: AbstractMatrix} = @tullio A[i, j] := x[i, j]
+
+# Colon slices, so `t[1, :]` works like it does for any other array.
+Base.getindex(v::Itensor, ::Colon, j::Int) = v[1:3, j]
+Base.getindex(v::Itensor, i::Int, ::Colon) = v[i, 1:3]
+Base.getindex(v::Itensor, ::Colon, ::Colon) = v[1:3, 1:3]
+Base.getindex(v::Itensor, i::UnitRange{Int}, ::Colon) = v[i, 1:3]
+Base.getindex(v::Itensor, ::Colon, j::UnitRange{Int}) = v[1:3, j]
+
+Base.setindex!(v::Itensor, vals, ::Colon, j::Int) = setindex!(v, vals, 1:3, j)
+Base.setindex!(v::Itensor, vals, i::Int, ::Colon) = setindex!(v, vals, i, 1:3)
+Base.setindex!(v::Itensor, vals, ::Colon, ::Colon) = setindex!(v, vals, 1:3, 1:3)

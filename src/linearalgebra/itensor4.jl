@@ -1,10 +1,9 @@
-
 Base.IndexStyle(::Itensor4) = IndexLinear()
 function Base.getindex(v::Itensor4, i::Int, j::Int, k::Int, l::Int)
-    cxxgetindex(v, i, j, k, l)[]
+    return cxxgetindex(v, i, j, k, l)[]
 end
 function Base.setindex!(v::Itensor4, val, i::Int, j::Int, k::Int, l::Int)
-    cxxsetindex!(v, convert(Float64, val), i, j, k, l)
+    return cxxsetindex!(v, convert(Float64, val), i, j, k, l)
 end
 
 Base.ndims(::Itensor4) = 4
@@ -40,15 +39,17 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", tensor::Itensor4)
     Base.print(io, "$(typeof(tensor)) with 3x3x3x3 entries\n")
-    Base.show(io, mime, convert(Array{Float64}, tensor))
+    return Base.show(io, mime, convert(Array{Float64}, tensor))
 end
 
 Base.convert(::Type{T}, x::Itensor4) where {T <: AbstractArray} = @tullio A[i, j, k, l] := x[i, j, k, l]
 
-function Base.getindex(v::Itensor4, i::Union{Int, UnitRange{Int}},
+function Base.getindex(
+        v::Itensor4, i::Union{Int, UnitRange{Int}},
         j::Union{Int, UnitRange{Int}},
         k::Union{Int, UnitRange{Int}},
-        l::Union{Int, UnitRange{Int}})
+        l::Union{Int, UnitRange{Int}}
+    )
     # If all indices are integers, use the scalar method:
     if isa(i, Int) && isa(j, Int) && isa(k, Int) && isa(l, Int)
         return cxxgetindex(v, i, j, k, l)[]
@@ -84,7 +85,7 @@ end
 function assign_slice!(v::Itensor4, new_vals, slices::NTuple{4, Union{Int, UnitRange{Int}}})
     # Compute the expected shape from indices that are ranges:
     range_dims = [length(s) for s in slices if s isa UnitRange{Int}]
-    @assert size(new_vals)==Tuple(range_dims) "Dimension mismatch in assignment"
+    @assert size(new_vals) == Tuple(range_dims) "Dimension mismatch in assignment"
 
     # For each index, if it’s an Int, turn it into a singleton range.
     Ir = slices[1] isa Int ? (slices[1]:slices[1]) : slices[1]
@@ -120,11 +121,13 @@ function assign_slice!(v::Itensor4, new_vals, slices::NTuple{4, Union{Int, UnitR
     return v
 end
 
-function Base.setindex!(v::Itensor4, new_vals,
+function Base.setindex!(
+        v::Itensor4, new_vals,
         i::Union{Int, UnitRange{Int}},
         j::Union{Int, UnitRange{Int}},
         k::Union{Int, UnitRange{Int}},
-        l::Union{Int, UnitRange{Int}})
+        l::Union{Int, UnitRange{Int}}
+    )
     # If all indices are integers, use the scalar method:
     if isa(i, Int) && isa(j, Int) && isa(k, Int) && isa(l, Int)
         cxxsetindex!(v, convert(Float64, new_vals), i, j, k, l)
