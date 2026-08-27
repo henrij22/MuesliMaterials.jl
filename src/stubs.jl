@@ -285,10 +285,33 @@ ElasticIsotropicMaterial
     ElasticAnisotropicMaterial(c::AbstractVector, ρ::Real = 1.0)
     ElasticAnisotropicMaterial(props::MaterialProperties)
 
-Fully anisotropic linear elasticity.
+Fully anisotropic linear elasticity, MUESLI's `elasticAnisotropicMaterial`.
 
-`c` must hold the **21** independent constants of the elasticity tensor; any other length
-raises an error.
+# Arguments
+- `c`: the **21** independent entries of the symmetric ``6 \\times 6`` stiffness matrix
+  ``\\mathbb{C}`` (any other length raises an error); see below for the ordering
+- `ρ`: density (default: `1.0`)
+- `props`: alternatively a property map
+
+# Details
+MUESLI's Voigt convention numbers the symmetric strain/stress components as
+``[11, 22, 33, 23, 13, 12]``, i.e. index 4 is the ``23`` shear, index 5 the ``13`` shear and
+index 6 the ``12`` shear — **not** the ``[11, 22, 33, 12, 23, 13]`` ordering used by some other
+tools. `c` fills the upper triangle of ``\\mathbb{C}`` row by row, starting from the diagonal
+entry of each row:
+```
+c = [C11, C12, C13, C14, C15, C16,
+          C22, C23, C24, C25, C26,
+               C33, C34, C35, C36,
+                    C44, C45, C46,
+                         C55, C56,
+                              C66]
+```
+so `c[1] == C11`, `c[2] == C12`, …, `c[7] == C22`, `c[8] == C23`, and so on down to
+`c[21] == C66`; the matrix is completed by symmetry (``C_{ij} = C_{ji}``).
+
+# See Also
+- [`ElasticOrthotropicMaterial`](@ref), [`ElasticTransverselyisotropicMaterial`](@ref)
 """
 ElasticAnisotropicMaterial
 
@@ -296,9 +319,21 @@ ElasticAnisotropicMaterial
     ElasticOrthotropicMaterial(c::AbstractVector, ρ::Real = 1.0)
     ElasticOrthotropicMaterial(props::MaterialProperties)
 
-Orthotropic linear elasticity.
+Orthotropic linear elasticity, MUESLI's `elasticOrthotropicMaterial`. A specialisation of
+[`ElasticAnisotropicMaterial`](@ref) for a material with three mutually orthogonal planes of
+material symmetry aligned with the coordinate axes; every stiffness entry coupling a normal and
+a shear direction, or two different shear directions, is implicitly zero.
 
-`c` must hold **9** constants; any other length raises an error.
+# Arguments
+- `c`: the **9** independent stiffness constants (any other length raises an error), in the
+  order
+  ```
+  c = [C11, C12, C13, C22, C23, C33, C44, C55, C66]
+  ```
+  using the same Voigt convention as [`ElasticAnisotropicMaterial`](@ref) — `C44`, `C55`, `C66`
+  are the ``23``, ``13`` and ``12`` shear stiffnesses, respectively.
+- `ρ`: density (default: `1.0`)
+- `props`: alternatively a property map
 """
 ElasticOrthotropicMaterial
 
@@ -306,9 +341,27 @@ ElasticOrthotropicMaterial
     ElasticTransverselyisotropicMaterial(c::AbstractVector, ρ::Real = 1.0)
     ElasticTransverselyisotropicMaterial(props::MaterialProperties)
 
-Transversely isotropic linear elasticity.
+Transversely isotropic linear elasticity, MUESLI's `elasticTransverselyisotropicMaterial`. A
+specialisation of [`ElasticAnisotropicMaterial`](@ref) with the axis of symmetry fixed along
+``x``, i.e. `[1, 0, 0]`: properties are isotropic in the transverse `y`-`z` plane, while `x` is
+the distinguished (e.g. fibre) direction.
 
-`c` must hold **6** constants; any other length raises an error.
+# Arguments
+- `c`: the **6** independent stiffness constants (any other length raises an error), in the
+  order
+  ```
+  c = [C11, C12, C22, C23, C44, C55]
+  ```
+  using the same Voigt convention as [`ElasticAnisotropicMaterial`](@ref). The remaining
+  entries of ``\\mathbb{C}`` follow from transverse isotropy: ``C13 = C12``, ``C33 = C22`` and
+  ``C66 = C55``.
+- `ρ`: density (default: `1.0`)
+- `props`: alternatively a property map
+
+!!! note
+    MUESLI also has a constructor that takes the engineering constants directly (``E_1``,
+    ``E_2``, ``\\nu_{12}``, ``G_{23}``, ``G_{12}``), but it is not currently exposed by this
+    wrapper — only the stiffness-vector form above is available.
 """
 ElasticTransverselyisotropicMaterial
 
