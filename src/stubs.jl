@@ -339,6 +339,7 @@ ElasticOrthotropicMaterial
 
 @doc """
     ElasticTransverselyisotropicMaterial(c::AbstractVector, ρ::Real = 1.0)
+    ElasticTransverselyisotropicMaterial(E1::Real, E2::Real, ν12::Real, G23::Real, G12::Real, ρ::Real = 1.0)
     ElasticTransverselyisotropicMaterial(props::MaterialProperties)
 
 Transversely isotropic linear elasticity, MUESLI's `elasticTransverselyisotropicMaterial`. A
@@ -355,13 +356,19 @@ the distinguished (e.g. fibre) direction.
   using the same Voigt convention as [`ElasticAnisotropicMaterial`](@ref). The remaining
   entries of ``\\mathbb{C}`` follow from transverse isotropy: ``C13 = C12``, ``C33 = C22`` and
   ``C66 = C55``.
+- `E1`, `E2`: the axial (``x``) and transverse (`y`-`z`) Young's moduli, as an alternative to
+  `c`
+- `ν12`: the axial-transverse Poisson's ratio
+- `G23`, `G12`: the transverse and axial-transverse shear moduli
 - `ρ`: density (default: `1.0`)
 - `props`: alternatively a property map
 
-!!! note
-    MUESLI also has a constructor that takes the engineering constants directly (``E_1``,
-    ``E_2``, ``\\nu_{12}``, ``G_{23}``, ``G_{12}``), but it is not currently exposed by this
-    wrapper — only the stiffness-vector form above is available.
+# Details
+Prefer the engineering-constants form when you have physical constants in hand: MUESLI's
+`c`-vector constructor only ever assigns the six entries above, leaving the remaining entries
+of ``\\mathbb{C}`` (the ones coupling a normal and a shear direction) at whatever the
+uninitialised matrix already held, whereas the engineering-constants constructor zeroes the
+whole matrix first and is fully deterministic.
 """
 ElasticTransverselyisotropicMaterial
 

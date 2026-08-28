@@ -177,7 +177,7 @@ end
     include("testutils.jl")
     # These material types are registered but not exported, unlike ElasticIsotropic.
     using MuesliMaterials: ElasticAnisotropicMaterial, ElasticOrthotropicMaterial,
-        ElasticTransverselyisotropicMaterial
+        ElasticTransverselyisotropicMaterial, ElasticTransverselyisotropicMP
 
     # The constant-vector constructors only validate the length here; whether the resulting
     # material is admissible is not asserted, because muesli's 9- and 6-constant constructors
@@ -193,6 +193,41 @@ end
         c = [210000.0, 80000.0, 0.3, 210000.0, 80000.0, 0.3]
         @test ElasticTransverselyisotropicMaterial(c, 1.0) !== nothing
         !Sys.isapple() && @test_throws Exception ElasticTransverselyisotropicMaterial([1.0], 1.0)
+    end
+
+    @testset "transversely isotropic from engineering constants" begin
+        # Unlike the c-vector constructor above, this one zeroes the whole elasticity matrix
+        # before filling it in, so check() and the stresses below are fully deterministic.
+        E1, E2, ν12, G23, G12 = 210000.0, 70000.0, 0.3, 25000.0, 30000.0
+        mat = ElasticTransverselyisotropicMaterial(E1, E2, ν12, G23, G12, 1.0)
+        @test MuesliMaterials.check(mat) isa Bool
+
+        # Replicates muesli's own derivation of the stiffness matrix from the engineering
+        # constants, to check the constructor end to end against the resulting stresses.
+        ν21 = E2 / E1 * ν12
+        ν23 = E2 / (2.0 * G23) - 1.0
+        lam = (ν12 * ν21 + ν23) / ((1.0 - ν23 - 2.0 * ν12 * ν21) * (1.0 + ν23)) * E2
+        C11 = (1.0 - ν23) / (1.0 - ν23 - 2.0 * ν12 * ν21) * E1
+        C12 = 2.0 * ν12 * (lam + G23)   # == C13, by transverse symmetry about the x axis
+        C22 = lam + 2.0 * G23           # == C33
+        C23 = lam
+
+        stress_at(ε) = begin
+            mp = ElasticTransverselyisotropicMP(mat)
+            MuesliMaterials.updateCurrentState(mp, 1.0, Istensor(ε))
+            σ = Istensor()
+            MuesliMaterials.stress!(mp, σ)
+            mat3(σ)
+        end
+
+        σ1 = stress_at(Diagonal3(0.001, 0.0, 0.0))
+        @test σ1[1, 1] ≈ C11 * 0.001 rtol = 1.0e-10
+        @test σ1[2, 2] ≈ C12 * 0.001 rtol = 1.0e-10
+        @test σ1[3, 3] ≈ C12 * 0.001 rtol = 1.0e-10
+
+        σ2 = stress_at(Diagonal3(0.0, 0.001, 0.0))
+        @test σ2[2, 2] ≈ C22 * 0.001 rtol = 1.0e-10
+        @test σ2[3, 3] ≈ C23 * 0.001 rtol = 1.0e-10
     end
 
     @testset "orthotropic is constructible from a property map" begin
