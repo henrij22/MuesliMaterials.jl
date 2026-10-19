@@ -4,7 +4,7 @@ authors = ["Henrik Jakob <jakob@ibb.uni-stuttgart.de> and contributors"]
 version = "0.2.1"
 
 [workspace]
-projects = ["docs"]
+projects = ["docs", "test"]
 
 [deps]
 CxxWrap = "1f15a43c-97ca-5a2a-ae31-89f07a497df4"
@@ -19,16 +19,7 @@ TensorsExt = "Tensors"
 
 [compat]
 CxxWrap = "0.17"
-MuesliMaterialsWrapper_jll = "0.2.2"
+MuesliMaterialsWrapper_jll = "1.0.0"
 Tensors = "1"
 Tullio = "0.3"
 julia = "1.10"
-
-[extras]
-Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
-TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
-
-[targets]
-test = ["Test", "Tensors", "Aqua", "TestItems", "TestItemRunner"]
