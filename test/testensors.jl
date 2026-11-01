@@ -61,8 +61,8 @@
     @test Tensor{4, 3}(T) == convert(Tensor{4, 3}, it4)
 
     if !Sys.isapple()
-        @test_throws "Input has to be a 3 vector." Ivector(rand(4))
-        @test_throws "Input has to be a 3 x 3 matrix." Itensor(rand(4, 4))
+        @test_throws "size 3," Ivector(rand(4))
+        @test_throws "size 3x3" Itensor(rand(4, 4))
     end
     # Testing slicing
     @test iv[1:2] ≈ v[1:2]
@@ -78,4 +78,55 @@
     it[1:2, 1:2] = t[1:2, 1:2]
     it[1:2, 1] = t[1:2, 1]
     it[1, 1:2] = t[1, 1:2]
+end
+
+@testitem "Bulk transfer between tensors and arrays" begin
+    t = [1.0 2.0 3.0; 4.0 5.0 6.0; 7.0 8.0 9.0]
+    T = reshape(collect(1.0:81.0), 3, 3, 3, 3)
+
+    @testset "copyto! out of a tensor" begin
+        A = zeros(3, 3)
+        @test copyto!(A, Itensor(t)) === A
+        @test A == t
+
+        a = zeros(3, 3, 3, 3)
+        copyto!(a, Itensor4(T))
+        @test a == T
+
+        v = zeros(3)
+        copyto!(v, Ivector([1.0, 2.0, 3.0]))
+        @test v == [1.0, 2.0, 3.0]
+    end
+
+    @testset "copyto! into an existing tensor" begin
+        it = Itensor(zeros(3, 3))
+        @test copyto!(it, t) === it
+        @test convert(Matrix{Float64}, it) == t
+
+        it4 = Itensor4()
+        copyto!(it4, T)
+        @test convert(Array{Float64}, it4) == T
+
+        iv = Ivector([0.0, 0.0, 0.0])
+        copyto!(iv, [1, 2, 3])
+        @test convert(Vector{Float64}, iv) == [1.0, 2.0, 3.0]
+    end
+
+    @testset "an Istensor stays symmetric" begin
+        ist = Istensor(zeros(3, 3))
+        copyto!(ist, t)
+        @test convert(Matrix{Float64}, ist) == (t + t') / 2
+    end
+
+    @testset "constructors accept any real array" begin
+        @test convert(Matrix{Float64}, Itensor(t')) == t'
+        @test convert(Matrix{Float64}, Itensor([1 2 3; 4 5 6; 7 8 9])) == t
+        @test convert(Matrix{Float64}, Istensor(t')) == (t + t') / 2
+        @test convert(Vector{Float64}, Ivector(1:3)) == [1.0, 2.0, 3.0]
+        @test convert(Array{Float64}, Itensor4(view(T, :, :, :, :))) == T
+    end
+
+    @testset "colon slices read the whole tensor" begin
+        @test Itensor(t)[:, :] == t
+    end
 end

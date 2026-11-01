@@ -2,7 +2,6 @@ module MuesliMaterials
 
 using CxxWrap
 using MuesliMaterialsWrapper_jll
-using Tullio
 
 @wrapmodule(() -> libjlmuesli)
 

@@ -38,7 +38,8 @@ MUESLI's constructor is row-major, so the components are reordered on the way in
 trip is faithful and nothing is transposed. Any other shape raises an error.
 
 Behaves like a `3 × 3` array: indexing and slicing (both 1-based), `axes`, `length`, `ndims`,
-iteration, and `convert` to `Matrix{Float64}`. With
+iteration, and `convert` to `Matrix{Float64}`. `copyto!(A, T)` and `copyto!(T, A)` move a whole
+tensor in one call and do not allocate, which is what to use in a hot loop. With
 [Tensors.jl](https://github.com/Ferrite-FEM/Tensors.jl) loaded it also converts to
 `Tensor{2, 3}`.
 
@@ -51,6 +52,10 @@ F = Itensor([1.05 0.02 0.0; 0.0 0.98 0.01; 0.0 0.0 1.01])
 F[1, 2]                           # 0.02
 F[1, :]                           # first row
 convert(Matrix{Float64}, F)
+
+A = zeros(3, 3)
+copyto!(A, F)                     # no allocation
+copyto!(F, 2 .* A)                # overwrite F in place
 ```
 
 # See Also

@@ -67,12 +67,20 @@ function Base.show(io::IO, mime::MIME"text/plain", tensor::Itensor)
     return
 end
 
-Base.convert(::Type{T}, x::Itensor) where {T <: AbstractMatrix} = @tullio A[i, j] := x[i, j]
+Itensor(A::AbstractMatrix{<:Real}) = Itensor(Matrix{Float64}(A))
+Istensor(A::AbstractMatrix{<:Real}) = Istensor(Matrix{Float64}(A))
+
+function Base.convert(::Type{T}, x::Itensor) where {T <: AbstractMatrix}
+    return copyto!(Matrix{Float64}(undef, 3, 3), x)
+end
+
+Base.copyto!(dest::Matrix{Float64}, src::Itensor) = (toArray!(dest, src); dest)
+Base.copyto!(dest::Itensor, src::AbstractMatrix{<:Real}) = (fromArray!(dest, Matrix{Float64}(src)); dest)
 
 # Colon slices, so `t[1, :]` works like it does for any other array.
 Base.getindex(v::Itensor, ::Colon, j::Int) = v[1:3, j]
 Base.getindex(v::Itensor, i::Int, ::Colon) = v[i, 1:3]
-Base.getindex(v::Itensor, ::Colon, ::Colon) = v[1:3, 1:3]
+Base.getindex(v::Itensor, ::Colon, ::Colon) = convert(Matrix{Float64}, v)
 Base.getindex(v::Itensor, i::UnitRange{Int}, ::Colon) = v[i, 1:3]
 Base.getindex(v::Itensor, ::Colon, j::UnitRange{Int}) = v[1:3, j]
 
