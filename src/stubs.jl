@@ -241,6 +241,18 @@ much later, when a stress evaluation returns nonsense.
 function check end
 
 @doc """
+    setDensity(material, ρ)
+    setReferenceTemperature(material, θ)
+    setVariational(material)
+
+Change a property every material has. `density` and `referenceTemperature` read them back,
+`isVariational` reports the flag, and `name` returns the name the material was created with.
+
+These change the material itself, so they also affect material points already created from it.
+"""
+function setDensity end
+
+@doc """
     print(material)
 
 Print MUESLI's own description of the material — its type and derived constants — to `stdout`.
@@ -617,6 +629,46 @@ For a linear isotropic material this is
 reproduces the stress.
 """
 function tangentTensor! end
+
+@doc """
+    tangentMatrix!(mp, C::Matrix{Float64})
+
+Compute the small strain tangent as a ``6 \\times 6`` matrix into the preallocated `C`.
+
+The rows and columns follow MUESLI's Voigt order ``[11, 22, 33, 23, 13, 12]``. The entries are
+the tensor components ``\\mathbb{C}_{abcd}`` of the corresponding index pairs, so the matrix
+acts on a strain vector with *engineering* shear components ``[\\varepsilon_{11},
+\\varepsilon_{22}, \\varepsilon_{33}, 2\\varepsilon_{23}, 2\\varepsilon_{13},
+2\\varepsilon_{12}]``. For an isotropic material the diagonal shear entries are ``\\mu``.
+
+Any shape other than ``6 \\times 6`` raises an error.
+
+# See Also
+- [`tangentTensor!`](@ref MuesliMaterials.tangentTensor!) for the fourth-order form
+"""
+function tangentMatrix! end
+
+@doc """
+    thermodynamicPotentials(mp) -> ThPotentials
+
+The thermodynamic potentials of the current state of a small strain material point.
+
+Read them with the accessors `chemical`, `deviatoric`, `dissipated`, `entropy`, `freeEnergy`,
+`freeEntropy`, `internalEnergy`, `kineticPotential`, `minimizing` and `volumetric`. Which of
+them a material fills in is up to the material; the others are zero. A linear isotropic
+material, for instance, sets `volumetric`, `deviatoric` and `internalEnergy`.
+"""
+function thermodynamicPotentials end
+
+@doc """
+    contractWithAllTangents!(mp, v1::Ivector, v2::Ivector, Tdev::Itensor, Tmixed::Istensor) -> Float64
+
+Contract the deviatoric and mixed tangents of a finite strain material point in one call.
+
+Fills `Tdev` and `Tmixed`, exactly as `contractWithDeviatoricTangent!` and
+`contractWithMixedTangent!` would separately, and returns the volumetric stiffness.
+"""
+function contractWithAllTangents! end
 
 @doc """
     firstPiolaKirchhoffStress!(mp, P::Itensor)

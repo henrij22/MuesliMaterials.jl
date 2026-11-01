@@ -23,6 +23,7 @@ MuesliMaterials.hasKeyword
 MuesliMaterials.check
 MuesliMaterials.print
 MuesliMaterials.createMaterialPoint
+MuesliMaterials.setDensity
 ```
 
 ## Small strain materials

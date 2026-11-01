@@ -196,3 +196,21 @@ end
         end
     end
 end
+
+@testitem "Finite strain: all tangent contractions at once" begin
+    include("testutils.jl")
+
+    mp = NeoHookeMP(NeoHookeMaterial(210000.0, 0.3))
+    MuesliMaterials.updateCurrentState(mp, 1.0, Itensor([1.05 0.02 0.0; 0.0 0.98 0.01; 0.0 0.0 1.01]))
+    v1, v2 = Ivector([1.0, 0.5, -0.3]), Ivector([0.2, -1.0, 0.7])
+
+    Tdev, Tmixed = Itensor(), Istensor()
+    Tvol = MuesliMaterials.contractWithAllTangents!(mp, v1, v2, Tdev, Tmixed)
+
+    Tdev_ref, Tmixed_ref = Itensor(), Istensor()
+    MuesliMaterials.contractWithDeviatoricTangent!(mp, v1, v2, Tdev_ref)
+    MuesliMaterials.contractWithMixedTangent!(mp, Tmixed_ref)
+    @test mat3(Tdev) ≈ mat3(Tdev_ref)
+    @test mat3(Tmixed) ≈ mat3(Tmixed_ref)
+    @test Tvol ≈ MuesliMaterials.volumetricStiffness(mp)
+end
