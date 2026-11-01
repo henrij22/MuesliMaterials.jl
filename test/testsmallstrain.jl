@@ -295,3 +295,33 @@ end
         @test MuesliMaterials.isVariational(mat)
     end
 end
+
+@testitem "Material points keep their material alive" begin
+    include("testutils.jl")
+
+    E, ν = 210000.0, 0.3
+    λ, μ = lame(E, ν)
+    ε = [0.001 0.0 0.0; 0.0 0.0 0.0; 0.0 0.0 0.0]
+    expected = 2μ * ε + λ * ε[1, 1] * I3
+
+    # the material goes out of scope as soon as the point is built
+    from_constructor() = ElasticIsotropicMP(ElasticIsotropicMaterial(E, ν))
+    from_create() = MuesliMaterials.createMaterialPoint(ElasticIsotropicMaterial(E, ν))
+
+    @testset "$name" for (name, make) in (("constructor", from_constructor), ("createMaterialPoint", from_create))
+        points = [make() for _ in 1:2000]
+        for _ in 1:3
+            GC.gc(true)
+        end
+        junk = [ElasticIsotropicMaterial(1.0 + i, 0.4) for i in 1:5000]   # reuse the freed memory
+
+        σ = Istensor()
+        stresses = map(points) do mp
+            MuesliMaterials.updateCurrentState(mp, 1.0, Istensor(ε))
+            MuesliMaterials.stress!(mp, σ)
+            mat3(σ)
+        end
+        @test all(s -> s ≈ expected, stresses)
+        @test length(junk) == 5000
+    end
+end

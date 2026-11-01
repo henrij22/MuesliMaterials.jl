@@ -214,3 +214,26 @@ end
     @test mat3(Tmixed) ≈ mat3(Tmixed_ref)
     @test Tvol ≈ MuesliMaterials.volumetricStiffness(mp)
 end
+
+@testitem "Finite strain points keep their material alive" begin
+    include("testutils.jl")
+
+    F = [1.05 0.02 0.0; 0.0 0.98 0.01; 0.0 0.0 1.01]
+    make() = NeoHookeMP(NeoHookeMaterial(210000.0, 0.3))
+
+    points = [make() for _ in 1:2000]
+    for _ in 1:3
+        GC.gc(true)
+    end
+    junk = [NeoHookeMaterial(1.0 + i, 0.4) for i in 1:5000]
+
+    P = Itensor()
+    stresses = map(points) do mp
+        MuesliMaterials.updateCurrentState(mp, 1.0, Itensor(F))
+        MuesliMaterials.firstPiolaKirchhoffStress!(mp, P)
+        mat3(P)
+    end
+    @test allequal(stresses)
+    @test all(isfinite, first(stresses))
+    @test length(junk) == 5000
+end

@@ -266,6 +266,9 @@ Create a material point for `material`.
 
 Equivalent to calling the matching `...MP` constructor, e.g. `ElasticIsotropicMP(material)`.
 
+The material point keeps `material` alive. MUESLI itself only holds a reference to it, so
+without this the garbage collector could free a material that points still use.
+
 # See Also
 - [`updateCurrentState`](@ref MuesliMaterials.updateCurrentState)
 """
