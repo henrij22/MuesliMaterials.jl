@@ -1,4 +1,4 @@
-using Documenter, DocumenterCodeBlocks, MuesliMaterials
+using Documenter, DocumenterCitations, DocumenterCodeBlocks, MuesliMaterials
 
 const liveserver = "liveserver" in ARGS
 
@@ -9,13 +9,18 @@ end
 
 DocMeta.setdocmeta!(MuesliMaterials, :DocTestSetup, :(using MuesliMaterials); recursive = true)
 
+bibtex_plugin = CitationBibliography(
+    joinpath(@__DIR__, "src", "assets", "references.bib"),
+    style = :numeric
+)
+
 makedocs(;
     format = Documenter.HTML(;
         canonical = "https://henrij22.github.io/MuesliMaterials.jl/stable",
         collapselevel = 1
     ),
     repo = Documenter.Remotes.GitHub("henrij22", "MuesliMaterials.jl"),
-    plugins = [CodeBlocks()],
+    plugins = [bibtex_plugin, CodeBlocks()],
     modules = [MuesliMaterials],
     sitename = "MuesliMaterials.jl",
     warnonly = true, checkdocs = :none,
@@ -33,6 +38,7 @@ makedocs(;
             "01_api_reference/02_materials.md",
             "01_api_reference/03_materialpoints.md",
         ],
+        "cited-literature.md",
     ]
 )
 

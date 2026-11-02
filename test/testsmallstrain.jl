@@ -325,3 +325,85 @@ end
         @test length(junk) == 5000
     end
 end
+
+@testitem "Small strain: viscoplasticity with nonlinear hardening" begin
+    include("testutils.jl")
+
+    mat = ViscoplasticNLMaterial(;
+        E = 210.0e3, nu = 0.3, rho = 7.8e-9, yield = 300.0, Hiso = 1000.0, Hinf = 100.0, H0 = 0.0,
+        Hdelta = 1.0, eta = 1.0, exponent = 1.0, alpha = 0.5
+    )
+    @test MuesliMaterials.check(mat)
+    @test MuesliMaterials.density(mat) ≈ 7.8e-9
+
+    function response(ε11, t)
+        mp = ViscoplasticNLMP(mat)
+        MuesliMaterials.updateCurrentState(mp, t, Istensor(Diagonal3(ε11, 0.0, 0.0)))
+        σ = Istensor()
+        MuesliMaterials.stress!(mp, σ)
+        return σ[1, 1], MuesliMaterials.plasticSlip(mp)
+    end
+
+    @test response(1.0e-4, 1.0)[2] == 0
+    @test response(2.0e-2, 1.0)[2] > 0
+    slow, medium, fast = (response(2.0e-2, t)[1] for t in (1.0e3, 1.0, 1.0e-3))
+    @test fast > medium ≥ slow
+end
+
+@testitem "Reduced models: small strain" begin
+    include("testutils.jl")
+
+    E, ν = 210.0e3, 0.3
+    G = E / (2 * (1 + ν))
+    ε = [1.0e-3 4.0e-4 2.0e-4; 4.0e-4 -5.0e-4 3.0e-4; 2.0e-4 3.0e-4 7.0e-4]
+
+    function response(R, ε, args...)
+        mat = ElasticIsotropicMaterial(E, ν)
+        rmp = R(ElasticIsotropicMP(mat), args...)
+        strain = Istensor(ε)
+        MuesliMaterials.updateCurrentState!(rmp, 1.0, strain)
+        σ = Istensor()
+        MuesliMaterials.stress!(rmp, σ)
+        C = zeros(6, 6)
+        MuesliMaterials.tangentMatrix!(rmp, C)
+        return mat3(strain), mat3(σ), C
+    end
+
+    @testset "bar" begin
+        εf, σ, C = response(SbarMP, Diagonal3(1.0e-3, 0.0, 0.0))
+        @test εf[2, 2] ≈ -ν * 1.0e-3 && εf[3, 3] ≈ -ν * 1.0e-3
+        @test σ[1, 1] ≈ E * 1.0e-3
+        @test C[1, 1] ≈ E
+    end
+
+    @testset "plane stress and shell" begin
+        for R in (SplaneMP, SshellMP)
+            εf, σ, C = response(R, ε)
+            @test εf[3, 3] ≈ -ν / (1 - ν) * (ε[1, 1] + ε[2, 2])
+            @test σ[3, 3] ≈ 0 atol = 1.0e-6
+            @test C[1, 1] ≈ E / (1 - ν^2)
+        end
+    end
+
+    @testset "beam" begin
+        _, σ, C = response(SbeamMP, ε)
+        @test all(abs(σ[i, j]) < 1.0e-6 for (i, j) in ((1, 1), (2, 2), (1, 2)))
+        @test C[3, 3] ≈ E && C[4, 4] ≈ G
+    end
+
+    @testset "conjugate gradient solver" begin
+        @test response(SbeamMP, ε, "nlcg")[2] ≈ response(SbeamMP, ε)[2] atol = 1.0e-6
+    end
+
+    @testset "the 3D point and its material outlive their last reference" begin
+        rmp = SplaneMP(ElasticIsotropicMP(ElasticIsotropicMaterial(E, ν)))
+        GC.gc(); GC.gc()
+        strain = Istensor(ε)
+        MuesliMaterials.updateCurrentState!(rmp, 1.0, strain)
+        σ = Istensor()
+        MuesliMaterials.stress!(rmp, σ)
+        @test σ[3, 3] ≈ 0 atol = 1.0e-6
+        @test rmp isa MuesliMaterials.ReducedSmallStrainMP
+        @test MuesliMaterials.MATERIAL_OF_POINT[rmp] isa ElasticIsotropicMP
+    end
+end
