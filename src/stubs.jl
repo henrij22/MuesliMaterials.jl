@@ -463,18 +463,25 @@ The `props` form uses `young`, `poisson` and one `eta` and `tau` entry per branc
 ViscoelasticMaterial
 
 @doc """
-    ViscoplasticMaterial(λ, μ, ρ, Hiso, Hkine, yield, plasticityType::String, eta, alpha)
+    ViscoplasticMaterial(; E, nu, yield, Hiso, Hkine, eta, alpha, exponent = 1.0, rateref = 1.0, rho = 1.0,
+                         plasticity = "von_mises")
     ViscoplasticMaterial(props::MaterialProperties)
+    ViscoplasticMaterial(λ, μ, ρ, Hiso, Hkine, yield, plasticityType::String, eta, alpha)
 
 Rate-dependent small strain plasticity.
 
 It uses the yield function of [`SplasticMaterial`](@ref) with linear isotropic (`Hiso`) and kinematic (`Hkine`)
-hardening and the initial yield stress `yield`, regularized by a linear viscosity `eta` with the relaxation time
-`τ = eta/(2μ)`. `alpha` is the thermal expansion coefficient.
+hardening and the initial yield stress `yield`, regularized by a viscosity `eta`. The viscous law is a power law with
+the exponent `exponent` and the reference rate `rateref`, and `alpha` is the thermal expansion coefficient.
+`plasticity` is `"von_mises"` or `"tresca"`.
+
+The `props` form uses the keys `young`, `poisson`, `density`, `yieldstress`, `isotropich`, `kinematich`, `eta`,
+`alpha`, `viscousexponent` and `srateref`, plus the string `"model"`.
 
 !!! warning
-    The positional constructor takes the Lamé constants `λ` and `μ`, because that is what MUESLI's constructor
-    expects, not Young's modulus and Poisson's ratio. The `props` form with `young` and `poisson` is not affected.
+    Prefer the keyword form. The positional constructor is MUESLI's own: it takes the Lamé constants `λ` and `μ`
+    instead of Young's modulus and Poisson's ratio, and it sets the exponent and the reference rate to zero, unlike
+    the other forms, which default them to one.
 """
 ViscoplasticMaterial
 

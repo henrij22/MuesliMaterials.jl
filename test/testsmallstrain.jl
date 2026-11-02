@@ -407,3 +407,28 @@ end
         @test MuesliMaterials.MATERIAL_OF_POINT[rmp] isa ElasticIsotropicMP
     end
 end
+
+@testitem "Small strain: viscoplasticity from keywords" begin
+    include("testutils.jl")
+
+    E, ν = 210.0e3, 0.3
+    mat = MuesliMaterials.ViscoplasticMaterial(;
+        E, nu = ν, rho = 7.8e-9, yield = 300.0, Hiso = 1000.0, Hkine = 0.0, eta = 1.0, alpha = 0.0
+    )
+    @test MuesliMaterials.check(mat)
+    @test MuesliMaterials.getProperty(mat, MuesliMaterials.PR_YOUNG) ≈ E
+    @test MuesliMaterials.getProperty(mat, MuesliMaterials.PR_POISSON) ≈ ν
+
+    function response(ε11, t)
+        mp = MuesliMaterials.ViscoplasticMP(mat)
+        MuesliMaterials.updateCurrentState(mp, t, Istensor(Diagonal3(ε11, -ν * ε11, -ν * ε11)))
+        σ = Istensor()
+        MuesliMaterials.stress!(mp, σ)
+        return σ[1, 1], MuesliMaterials.plasticSlip(mp)
+    end
+
+    σ, slip = response(1.0e-4, 1.0)
+    @test σ ≈ E * 1.0e-4 rtol = 1.0e-6
+    @test slip == 0
+    @test response(2.0e-2, 1.0)[2] > 0
+end

@@ -41,3 +41,16 @@ function ViscoplasticNLMaterial(;
     setString!(props, "plasticity", plasticity)
     return ViscoplasticNLMaterial(props)
 end
+
+function ViscoplasticMaterial(;
+        E, nu, yield, Hiso, Hkine, eta, alpha, exponent = 1.0, rateref = 1.0, rho = 1.0,
+        plasticity = "von_mises"
+    )
+    props = propertymap(
+        "young" => E, "poisson" => nu, "density" => rho, "yieldstress" => yield,
+        "isotropich" => Hiso, "kinematich" => Hkine, "eta" => eta, "alpha" => alpha,
+        "viscousexponent" => exponent, "srateref" => rateref,
+    )
+    setString!(props, "model", plasticity)
+    return ViscoplasticMaterial(props)
+end
