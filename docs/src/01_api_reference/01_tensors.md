@@ -20,6 +20,8 @@ Each type implements enough of the `AbstractArray` interface to be used like one
 - `getindex` / `setindex!`, including `UnitRange` slices
 - `axes`, `ndims`, `length`, `similar`
 - `iterate`, so `sum`, `collect` and comprehensions work
+- `copyto!` to and from a preallocated `Vector`/`Matrix`/`Array{Float64, 4}`, in one call and
+  without allocating (other element types are converted first)
 - `convert` to `Matrix{Float64}` / `Array{Float64}`, and — with
   [Tensors.jl](https://github.com/Ferrite-FEM/Tensors.jl) loaded — to `Tensor{2,3}` and
   `SymmetricTensor{2,3}`

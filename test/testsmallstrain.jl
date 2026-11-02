@@ -245,3 +245,83 @@ end
         !Sys.isapple() && @test_throws Exception ElasticAnisotropicMaterial(zeros(20), 1.0)
     end
 end
+
+@testitem "Small strain: Voigt tangent matrix" begin
+    include("testutils.jl")
+
+    E, ν = 210000.0, 0.3
+    λ, μ = lame(E, ν)
+
+    mp = ElasticIsotropicMP(ElasticIsotropicMaterial(E, ν))
+    MuesliMaterials.updateCurrentState(mp, 1.0, Istensor(zeros(3, 3)))
+
+    Cm = zeros(6, 6)
+    MuesliMaterials.tangentMatrix!(mp, Cm)
+
+    # order 11, 22, 33, 23, 13, 12; the matrix acts on engineering shear strains
+    expected = zeros(6, 6)
+    for i in 1:3, j in 1:3
+        expected[i, j] = i == j ? λ + 2μ : λ
+    end
+    for i in 4:6
+        expected[i, i] = μ
+    end
+    @test Cm ≈ expected rtol = 1.0e-10
+
+    !Sys.isapple() && @test_throws Exception MuesliMaterials.tangentMatrix!(mp, zeros(3, 3))
+end
+
+@testitem "Small strain: thermodynamic potentials" begin
+    include("testutils.jl")
+
+    mp = ElasticIsotropicMP(ElasticIsotropicMaterial(210000.0, 0.3))
+    ε = [0.001 0.0002 0.0; 0.0002 -0.0005 0.0001; 0.0 0.0001 0.0003]
+    MuesliMaterials.updateCurrentState(mp, 1.0, Istensor(ε))
+
+    tp = MuesliMaterials.thermodynamicPotentials(mp)
+    @test MuesliMaterials.volumetric(tp) ≈ MuesliMaterials.volumetricEnergy(mp) rtol = 1.0e-10
+    @test MuesliMaterials.deviatoric(tp) ≈ MuesliMaterials.deviatoricEnergy(mp) rtol = 1.0e-10
+    @test MuesliMaterials.internalEnergy(tp) ≈ MuesliMaterials.storedEnergy(mp) rtol = 1.0e-10
+end
+
+@testitem "Properties shared by every material" begin
+    for mat in (ElasticIsotropicMaterial(210000.0, 0.3), NeoHookeMaterial(210000.0, 0.3))
+        MuesliMaterials.setDensity(mat, 7.85)
+        @test MuesliMaterials.density(mat) == 7.85
+        MuesliMaterials.setReferenceTemperature(mat, 293.0)
+        @test MuesliMaterials.referenceTemperature(mat) == 293.0
+        @test !MuesliMaterials.isVariational(mat)
+        MuesliMaterials.setVariational(mat)
+        @test MuesliMaterials.isVariational(mat)
+    end
+end
+
+@testitem "Material points keep their material alive" begin
+    include("testutils.jl")
+
+    E, ν = 210000.0, 0.3
+    λ, μ = lame(E, ν)
+    ε = [0.001 0.0 0.0; 0.0 0.0 0.0; 0.0 0.0 0.0]
+    expected = 2μ * ε + λ * ε[1, 1] * I3
+
+    # the material goes out of scope as soon as the point is built
+    from_constructor() = ElasticIsotropicMP(ElasticIsotropicMaterial(E, ν))
+    from_create() = MuesliMaterials.createMaterialPoint(ElasticIsotropicMaterial(E, ν))
+
+    @testset "$name" for (name, make) in (("constructor", from_constructor), ("createMaterialPoint", from_create))
+        points = [make() for _ in 1:2000]
+        for _ in 1:3
+            GC.gc(true)
+        end
+        junk = [ElasticIsotropicMaterial(1.0 + i, 0.4) for i in 1:5000]   # reuse the freed memory
+
+        σ = Istensor()
+        stresses = map(points) do mp
+            MuesliMaterials.updateCurrentState(mp, 1.0, Istensor(ε))
+            MuesliMaterials.stress!(mp, σ)
+            mat3(σ)
+        end
+        @test all(s -> s ≈ expected, stresses)
+        @test length(junk) == 5000
+    end
+end

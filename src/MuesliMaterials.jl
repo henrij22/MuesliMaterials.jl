@@ -2,7 +2,6 @@ module MuesliMaterials
 
 using CxxWrap
 using MuesliMaterialsWrapper_jll
-using Tullio
 
 @wrapmodule(() -> libjlmuesli)
 
@@ -17,6 +16,7 @@ export ElasticIsotropicMP, NeoHookeMP, SVKMP, YeohMP
 include("linearalgebra/ivector.jl")
 include("linearalgebra/itensor.jl")
 include("linearalgebra/itensor4.jl")
+include("materialpoints.jl")
 
 # Documentation
 include("stubs.jl")

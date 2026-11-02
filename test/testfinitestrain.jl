@@ -196,3 +196,44 @@ end
         end
     end
 end
+
+@testitem "Finite strain: all tangent contractions at once" begin
+    include("testutils.jl")
+
+    mp = NeoHookeMP(NeoHookeMaterial(210000.0, 0.3))
+    MuesliMaterials.updateCurrentState(mp, 1.0, Itensor([1.05 0.02 0.0; 0.0 0.98 0.01; 0.0 0.0 1.01]))
+    v1, v2 = Ivector([1.0, 0.5, -0.3]), Ivector([0.2, -1.0, 0.7])
+
+    Tdev, Tmixed = Itensor(), Istensor()
+    Tvol = MuesliMaterials.contractWithAllTangents!(mp, v1, v2, Tdev, Tmixed)
+
+    Tdev_ref, Tmixed_ref = Itensor(), Istensor()
+    MuesliMaterials.contractWithDeviatoricTangent!(mp, v1, v2, Tdev_ref)
+    MuesliMaterials.contractWithMixedTangent!(mp, Tmixed_ref)
+    @test mat3(Tdev) ≈ mat3(Tdev_ref)
+    @test mat3(Tmixed) ≈ mat3(Tmixed_ref)
+    @test Tvol ≈ MuesliMaterials.volumetricStiffness(mp)
+end
+
+@testitem "Finite strain points keep their material alive" begin
+    include("testutils.jl")
+
+    F = [1.05 0.02 0.0; 0.0 0.98 0.01; 0.0 0.0 1.01]
+    make() = NeoHookeMP(NeoHookeMaterial(210000.0, 0.3))
+
+    points = [make() for _ in 1:2000]
+    for _ in 1:3
+        GC.gc(true)
+    end
+    junk = [NeoHookeMaterial(1.0 + i, 0.4) for i in 1:5000]
+
+    P = Itensor()
+    stresses = map(points) do mp
+        MuesliMaterials.updateCurrentState(mp, 1.0, Itensor(F))
+        MuesliMaterials.firstPiolaKirchhoffStress!(mp, P)
+        mat3(P)
+    end
+    @test allequal(stresses)
+    @test all(isfinite, first(stresses))
+    @test length(junk) == 5000
+end

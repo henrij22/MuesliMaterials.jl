@@ -29,4 +29,11 @@ function Base.show(io::IO, ::MIME"text/plain", vec::Ivector)
     return Base.print(io, "$(vec[1])\n$(vec[2])\n$(vec[3])")
 end
 
-Base.convert(::Type{T}, x::Ivector) where {T <: AbstractVector} = @tullio a[i] := x[i]
+Ivector(v::AbstractVector{<:Real}) = Ivector(convert(Vector{Float64}, v))
+
+function Base.convert(::Type{T}, x::Ivector) where {T <: AbstractVector}
+    return copyto!(Vector{Float64}(undef, 3), x)
+end
+
+Base.copyto!(dest::Vector{Float64}, src::Ivector) = (toArray!(dest, src); dest)
+Base.copyto!(dest::Ivector, src::AbstractVector{<:Real}) = (fromArray!(dest, convert(Vector{Float64}, src)); dest)

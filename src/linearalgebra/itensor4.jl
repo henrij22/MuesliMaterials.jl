@@ -42,7 +42,17 @@ function Base.show(io::IO, mime::MIME"text/plain", tensor::Itensor4)
     return Base.show(io, mime, convert(Array{Float64}, tensor))
 end
 
-Base.convert(::Type{T}, x::Itensor4) where {T <: AbstractArray} = @tullio A[i, j, k, l] := x[i, j, k, l]
+Itensor4(A::AbstractArray{<:Real, 4}) = Itensor4(convert(Array{Float64, 4}, A))
+
+function Base.convert(::Type{T}, x::Itensor4) where {T <: AbstractArray}
+    return copyto!(Array{Float64}(undef, 3, 3, 3, 3), x)
+end
+
+Base.copyto!(dest::Array{Float64, 4}, src::Itensor4) = (toArray!(dest, src); dest)
+function Base.copyto!(dest::Itensor4, src::AbstractArray{<:Real, 4})
+    fromArray!(dest, convert(Array{Float64, 4}, src))
+    return dest
+end
 
 function Base.getindex(
         v::Itensor4, i::Union{Int, UnitRange{Int}},

@@ -32,6 +32,8 @@ MuesliMaterials.stress!
 MuesliMaterials.deviatoricStress!
 MuesliMaterials.pressure
 MuesliMaterials.tangentTensor!
+MuesliMaterials.tangentMatrix!
+MuesliMaterials.thermodynamicPotentials
 ```
 
 ## Finite strain response
@@ -53,6 +55,7 @@ MuesliMaterials.convergedDeformationGradient
 MuesliMaterials.convectedTangent!
 MuesliMaterials.materialTangent!
 MuesliMaterials.spatialTangent!
+MuesliMaterials.contractWithAllTangents!
 ```
 
 ## Energies
