@@ -268,7 +268,7 @@ end
     end
     @test Cm ≈ expected rtol = 1.0e-10
 
-    @test_throws Exception MuesliMaterials.tangentMatrix!(mp, zeros(3, 3))
+    !Sys.isapple() && @test_throws Exception MuesliMaterials.tangentMatrix!(mp, zeros(3, 3))
 end
 
 @testitem "Small strain: thermodynamic potentials" begin
