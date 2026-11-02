@@ -1136,10 +1136,7 @@ C[1, 1]                           # E / (1 - ν²)
 ```
 
 # References
-- Klinkel, Govindjee (2002), Using finite strain 3D-material models in beam and shell elements,
-  Engineering Computations 19, 902-921.
-- Portillo, Oesterle, Thierer, Bischoff, Romero (2020), Structural models based on 3D constitutive
-  laws: Variational structure and numerical solution, Computer Methods in Applied Mechanics and Engineering 362, 112872.
+The formulation follows [klinkel_using_2002](@cite) and [portillo_structural_2020](@cite).
 
 # See Also
 - [`MuesliMaterials.ReducedSmallStrainMP`](@ref), [`MuesliMaterials.ReducedFiniteStrainMP`](@ref)
