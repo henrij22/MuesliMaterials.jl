@@ -18,6 +18,6 @@ TensorsExt = "Tensors"
 
 [compat]
 CxxWrap = "0.17"
-MuesliMaterialsWrapper_jll = "1.2.0"
+MuesliMaterialsWrapper_jll = "1.2.1"
 Tensors = "1"
 julia = "1.10"

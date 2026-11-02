@@ -418,6 +418,7 @@ end
     @test MuesliMaterials.check(mat)
     @test MuesliMaterials.getProperty(mat, MuesliMaterials.PR_YOUNG) ≈ E
     @test MuesliMaterials.getProperty(mat, MuesliMaterials.PR_POISSON) ≈ ν
+    @test MuesliMaterials.density(mat) ≈ 7.8e-9
 
     function response(ε11, t)
         mp = MuesliMaterials.ViscoplasticMP(mat)
@@ -431,4 +432,15 @@ end
     @test σ ≈ E * 1.0e-4 rtol = 1.0e-6
     @test slip == 0
     @test response(2.0e-2, 1.0)[2] > 0
+end
+
+@testitem "Small strain: positional viscoplasticity takes Young's modulus and Poisson's ratio" begin
+    include("testutils.jl")
+
+    E, ν = 210.0e3, 0.3
+    mat = MuesliMaterials.ViscoplasticMaterial(E, ν, 7.8e-9, 1000.0, 0.0, 300.0, "mises", 1.0, 0.0)
+    @test MuesliMaterials.check(mat)
+    @test MuesliMaterials.density(mat) ≈ 7.8e-9
+    @test MuesliMaterials.getProperty(mat, MuesliMaterials.PR_YOUNG) ≈ E
+    @test MuesliMaterials.getProperty(mat, MuesliMaterials.PR_POISSON) ≈ ν
 end

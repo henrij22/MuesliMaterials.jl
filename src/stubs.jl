@@ -485,22 +485,17 @@ ViscoelasticMaterial
     ViscoplasticMaterial(; E, nu, yield, Hiso, Hkine, eta, alpha, exponent = 1.0, rateref = 1.0, rho = 1.0,
                          plasticity = "von_mises")
     ViscoplasticMaterial(props::MaterialProperties)
-    ViscoplasticMaterial(λ, μ, ρ, Hiso, Hkine, yield, plasticityType::String, eta, alpha)
+    ViscoplasticMaterial(E, ν, ρ, Hiso, Hkine, yield, plasticityType::String, eta, alpha)
 
 Rate-dependent small strain plasticity.
 
 It uses the yield function of [`SplasticMaterial`](@ref) with linear isotropic (`Hiso`) and kinematic (`Hkine`)
 hardening and the initial yield stress `yield`, regularized by a viscosity `eta`. The viscous law is a power law with
 the exponent `exponent` and the reference rate `rateref`, and `alpha` is the thermal expansion coefficient.
-`plasticity` is `"von_mises"` or `"tresca"`.
+`plasticity` is `"von_mises"` or `"tresca"`, and the positional `plasticityType` is `"mises"` or `"tresca"`.
 
 The `props` form uses the keys `young`, `poisson`, `density`, `yieldstress`, `isotropich`, `kinematich`, `eta`,
 `alpha`, `viscousexponent` and `srateref`, plus the string `"model"`.
-
-!!! warning
-    Prefer the keyword form. The positional constructor is MUESLI's own: it takes the Lamé constants `λ` and `μ`
-    instead of Young's modulus and Poisson's ratio, and it sets the exponent and the reference rate to zero, unlike
-    the other forms, which default them to one.
 """
 ViscoplasticMaterial
 
