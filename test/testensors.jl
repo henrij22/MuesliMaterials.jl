@@ -60,6 +60,12 @@
     @test SymmetricTensor{2, 3}(ts) == convert(SymmetricTensor{2, 3}, ist)
     @test Tensor{4, 3}(T) == convert(Tensor{4, 3}, it4)
 
+    # the constructors for plain real arrays must not be ambiguous with the Tensors.jl ones
+    @test convert(Vector{Float64}, Ivector(Tensor{1, 3}(v))) == v
+    @test convert(Matrix{Float64}, Itensor(Tensor{2, 3}(t))) == t
+    @test convert(Matrix{Float64}, Istensor(SymmetricTensor{2, 3}(ts))) == ts
+    @test convert(Array{Float64}, Itensor4(Tensor{4, 3}(T))) == T
+
     if !Sys.isapple()
         @test_throws "size 3," Ivector(rand(4))
         @test_throws "size 3x3" Itensor(rand(4, 4))

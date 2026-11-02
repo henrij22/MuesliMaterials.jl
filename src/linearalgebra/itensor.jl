@@ -67,15 +67,15 @@ function Base.show(io::IO, mime::MIME"text/plain", tensor::Itensor)
     return
 end
 
-Itensor(A::AbstractMatrix{<:Real}) = Itensor(Matrix{Float64}(A))
-Istensor(A::AbstractMatrix{<:Real}) = Istensor(Matrix{Float64}(A))
+Itensor(A::AbstractMatrix{<:Real}) = Itensor(convert(Matrix{Float64}, A))
+Istensor(A::AbstractMatrix{<:Real}) = Istensor(convert(Matrix{Float64}, A))
 
 function Base.convert(::Type{T}, x::Itensor) where {T <: AbstractMatrix}
     return copyto!(Matrix{Float64}(undef, 3, 3), x)
 end
 
 Base.copyto!(dest::Matrix{Float64}, src::Itensor) = (toArray!(dest, src); dest)
-Base.copyto!(dest::Itensor, src::AbstractMatrix{<:Real}) = (fromArray!(dest, Matrix{Float64}(src)); dest)
+Base.copyto!(dest::Itensor, src::AbstractMatrix{<:Real}) = (fromArray!(dest, convert(Matrix{Float64}, src)); dest)
 
 # Colon slices, so `t[1, :]` works like it does for any other array.
 Base.getindex(v::Itensor, ::Colon, j::Int) = v[1:3, j]

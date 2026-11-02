@@ -39,7 +39,7 @@ trip is faithful and nothing is transposed. Any other shape raises an error.
 
 Behaves like a `3 × 3` array: indexing and slicing (both 1-based), `axes`, `length`, `ndims`,
 iteration, and `convert` to `Matrix{Float64}`. `copyto!(A, T)` and `copyto!(T, A)` move a whole
-tensor in one call and do not allocate, which is what to use in a hot loop. With
+tensor in one call and do not allocate for `Float64` arrays, which is what to use in a hot loop. With
 [Tensors.jl](https://github.com/Ferrite-FEM/Tensors.jl) loaded it also converts to
 `Tensor{2, 3}`.
 

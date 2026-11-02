@@ -42,7 +42,7 @@ function Base.show(io::IO, mime::MIME"text/plain", tensor::Itensor4)
     return Base.show(io, mime, convert(Array{Float64}, tensor))
 end
 
-Itensor4(A::AbstractArray{<:Real, 4}) = Itensor4(Array{Float64, 4}(A))
+Itensor4(A::AbstractArray{<:Real, 4}) = Itensor4(convert(Array{Float64, 4}, A))
 
 function Base.convert(::Type{T}, x::Itensor4) where {T <: AbstractArray}
     return copyto!(Array{Float64}(undef, 3, 3, 3, 3), x)
@@ -50,7 +50,7 @@ end
 
 Base.copyto!(dest::Array{Float64, 4}, src::Itensor4) = (toArray!(dest, src); dest)
 function Base.copyto!(dest::Itensor4, src::AbstractArray{<:Real, 4})
-    fromArray!(dest, Array{Float64, 4}(src))
+    fromArray!(dest, convert(Array{Float64, 4}, src))
     return dest
 end
 
