@@ -349,7 +349,8 @@ Fully anisotropic linear elasticity, MUESLI's `elasticAnisotropicMaterial`.
 - `c`: the **21** independent entries of the symmetric ``6 \\times 6`` stiffness matrix
   ``\\mathbb{C}`` (any other length raises an error); see below for the ordering
 - `ρ`: density (default: `1.0`)
-- `props`: alternatively a property map
+- `props`: alternatively a property map with the keys `c1111`, `c1122`, `c1133`, `c1123`, `c1113`, `c1112`, `c2222`, …,
+  `c1212`, in the order of `c` below
 
 # Details
 MUESLI's Voigt convention numbers the symmetric strain/stress components as
@@ -391,7 +392,8 @@ a shear direction, or two different shear directions, is implicitly zero.
   using the same Voigt convention as [`ElasticAnisotropicMaterial`](@ref) — `C44`, `C55`, `C66`
   are the ``23``, ``13`` and ``12`` shear stiffnesses, respectively.
 - `ρ`: density (default: `1.0`)
-- `props`: alternatively a property map
+- `props`: alternatively a property map with the engineering constants `young1`, `young2`, `young3`,
+  `poisson12`, `poisson13`, `poisson23`, `g23`, `g12` and `g13`
 """
 ElasticOrthotropicMaterial
 
@@ -419,14 +421,10 @@ the distinguished (e.g. fibre) direction.
 - `ν12`: the axial-transverse Poisson's ratio
 - `G23`, `G12`: the transverse and axial-transverse shear moduli
 - `ρ`: density (default: `1.0`)
-- `props`: alternatively a property map
+- `props`: alternatively a property map with `young1`, `young2`, `poisson12`, `g23` and `g12`
 
 # Details
-Prefer the engineering-constants form when you have physical constants in hand: MUESLI's
-`c`-vector constructor only ever assigns the six entries above, leaving the remaining entries
-of ``\\mathbb{C}`` (the ones coupling a normal and a shear direction) at whatever the
-uninitialised matrix already held, whereas the engineering-constants constructor zeroes the
-whole matrix first and is fully deterministic.
+In both forms the entries of ``\\mathbb{C}`` that are not set explicitly are zero.
 """
 ElasticTransverselyisotropicMaterial
 
@@ -434,12 +432,18 @@ ElasticTransverselyisotropicMaterial
     SplasticMaterial(E, ν, ρ, Hiso, Hkine, yield, xalpha, plasticityType::String)
     SplasticMaterial(props::MaterialProperties)
 
-Small strain plasticity with isotropic and kinematic hardening.
+Rate-independent small strain plasticity with Young's modulus `E`, Poisson's ratio `ν`, density `ρ` and
+the initial yield stress `yield`. `Hiso` and `Hkine` are the isotropic and kinematic hardening moduli.
+The elastic energy is `K/2 (tr ε)² + μ ‖dev(ε - εᵖ)‖²`.
 
-# Arguments
-- `Hiso`, `Hkine`: isotropic and kinematic hardening moduli
-- `yield`: initial yield stress
-- `plasticityType`: the hardening law, as a MUESLI keyword
+`plasticityType` selects the yield criterion:
+- `"mises"`: `f = ‖dev(σ) - Q‖ - √(2/3) (yield - q)` with linear isotropic and kinematic hardening,
+  `Wᵖ = Hiso/2 ξ² + Hkine/3 ‖Ξ‖²`.
+- `"tresca"`: `f = σ₁ - σ₃ - (yield - q)` with the principal stresses `σ₁ ≥ σ₃` and linear isotropic hardening.
+- `"drucker"`: `f = √J₂ + xalpha tr(σ) - (xalpha + √3/3)(yield - q)` with linear isotropic hardening;
+  `xalpha` is the semi-angle of the cone and is not used by the other criteria.
+
+Here `q` is the isotropic hardening stress and `Q` the kinematic one.
 """
 SplasticMaterial
 
@@ -447,38 +451,67 @@ SplasticMaterial
     ViscoelasticMaterial(E, ν, ρ, nvisco::Integer, eta::AbstractVector, tau::AbstractVector)
     ViscoelasticMaterial(props::MaterialProperties)
 
-Small strain viscoelasticity with `nvisco` Maxwell branches.
+Small strain viscoelasticity as a generalized Maxwell model with `nvisco` branches. `E` and `ν` are the long-term
+(equilibrium) constants. The volumetric response is elastic and only the deviatoric part is viscous,
+`dev(σ) = 2μ∞ e + Σₐ 2μₐ (e - eₐᵛ)` with `μ∞ = E/(2(1 + ν))` and the deviatoric strain `e`.
 
-`eta` and `tau` give the viscosity and relaxation time of each branch.
+Branch `a` has the relaxation time `tau[a]` and the shear modulus `μₐ = eta[a]/(2 tau[a])`, so `eta` is a
+viscosity, not a modulus. Its internal strain is advanced by implicit Euler, `eₐᵛ ← eₐᵛ + Δt/(Δt + τₐ) (e - eₐᵛ)`.
+
+The `props` form uses `young`, `poisson` and one `eta` and `tau` entry per branch.
 """
 ViscoelasticMaterial
 
 @doc """
-    ViscoplasticMaterial(E, ν, ρ, Hiso, Hkine, yield, plasticityType::String, eta, alpha)
+    ViscoplasticMaterial(λ, μ, ρ, Hiso, Hkine, yield, plasticityType::String, eta, alpha)
     ViscoplasticMaterial(props::MaterialProperties)
 
-Small strain viscoplasticity, with `eta` and `alpha` setting the rate dependence.
+Rate-dependent small strain plasticity.
+
+It uses the yield function of [`SplasticMaterial`](@ref) with linear isotropic (`Hiso`) and kinematic (`Hkine`)
+hardening and the initial yield stress `yield`, regularized by a linear viscosity `eta` with the relaxation time
+`τ = eta/(2μ)`. `alpha` is the thermal expansion coefficient.
+
+!!! warning
+    The positional constructor takes the Lamé constants `λ` and `μ`, because that is what MUESLI's constructor
+    expects, not Young's modulus and Poisson's ratio. The `props` form with `young` and `poisson` is not affected.
 """
 ViscoplasticMaterial
 
 @doc """
     GTN_Material(E, ν, ρ, q1, q2, yield)
 
-Gurson-Tvergaard-Needleman ductile damage.
+Gurson-Tvergaard-Needleman porous plasticity without hardening, with the damage variable `d`. The stress is scaled by
+`1 - d`, and the yield function is `3/2 s² + 2 q1 fᵥ cosh(q2 t/2) - 1 - (q1 fᵥ)²` with the void fraction `fᵥ`, the
+normalized deviatoric stress norm `s = ‖dev σ‖/yield` and the normalized trace `t = tr σ/yield`. `q1` and `q2` are the
+Tvergaard parameters and `yield` is the yield stress of the matrix.
+
+The `props` form uses `young`, `poisson`, `density`, `yieldstress`, `q1_gurson` and `q2_gurson`.
 """
 GTN_Material
 
 @doc """
     Gurson_Material(E, ν, ρ, xRinf, xRb, yield)
 
-Gurson porous plasticity.
+Gurson porous plasticity with isotropic hardening. The yield function is `J₂(dev σ) - a Y²/3` with
+`a = 1 + f² - 2f cosh(3p/(2Y))`, where `f` is the void fraction (the damage variable `d` in MUESLI) and `p = tr(σ)/3`.
+The yield stress `Y = yield + xRinf (1 - exp(-xRb R))` saturates at `yield + xRinf` with the rate `xRb`.
+
+The `props` form uses `young`, `poisson`, `density`, `yieldstress`, `rinf_hardening` and `rb_hardening`.
 """
 Gurson_Material
 
 @doc """
     Lemaitre_Material(E, ν, ρ, r, s, yield, xR_inf, xR_b)
 
-Lemaitre ductile damage.
+Lemaitre ductile damage with von Mises plasticity and saturating isotropic hardening. The stress is scaled by `1 - d`,
+the yield function is `√(3/2) ‖dev σ‖/(1 - d) - σᵧ(R)` with `σᵧ = yield + xR_inf (1 - exp(-xR_b R))`, and the damage
+grows as `ḋ = γ̇ (-Y/r)ˢ/(1 - d)`. `Y = -σᵧ²/(6G) - K εᵥ²/2` is the damage energy release rate with the shear
+modulus `G`, the bulk modulus `K` and the elastic volumetric strain `εᵥ`. `r` is the denominator and `s` the
+exponent of the damage law.
+
+The `props` form uses `young`, `poisson`, `density`, `yieldstress`, `r_lemaitre`, `s_lemaitre`, `rinf_hardening`
+and `rb_hardening`.
 """
 Lemaitre_Material
 
@@ -486,16 +519,24 @@ Lemaitre_Material
     LemKin_Material(E, ν, ρ, r, s, yield, xR_inf, xR_b, xa, xb)
 
 Lemaitre damage with kinematic hardening.
+
+This is [`Lemaitre_Material`](@ref) with an additional kinematic hardening of Armstrong-Frederick type: the back
+stress `β` evolves as `β̇ = γ̇ (xa N - xb β)` with the flow direction `N`, where `xa` is the hardening coefficient
+and `xb` the dynamic recovery.
+
+The `props` form adds `akin_hardening` and `bkin_hardening` to the keys of [`Lemaitre_Material`](@ref).
 """
 LemKin_Material
 
 @doc """
     NeoHookeMaterial(props::MaterialProperties)
 
-Compressible neo-Hookean hyperelasticity, MUESLI's `neohookeanMaterial`.
+Compressible neo-Hookean hyperelasticity, MUESLI's `neohookeanMaterial`. The stored energy is
+`W = λ/2 (ln J)² + μ/2 (I₁ - 3) - μ ln J` with `I₁ = tr C` and `J = det F`. At ``F = I`` the material is stress
+free and stores no energy.
 
-Build it from a property map carrying `"young"` and `"poisson"`. At ``F = I`` the material is
-stress free and stores no energy.
+Build it from a property map carrying `"young"` and `"poisson"` (or `"lambda"` and `"mu"`). Setting the key
+`"subtype regularized"` selects `W = K/2 (ln J)² + μ/2 (Ĩ₁ - 3)` with `Ĩ₁ = J^(-2/3) I₁` and the bulk modulus `K`.
 
 # Examples
 ```julia
@@ -515,36 +556,65 @@ NeoHookeMaterial
 @doc """
     SVKMaterial(props::MaterialProperties)
 
-Saint Venant-Kirchhoff hyperelasticity — the linear relation between the Green-Lagrange strain
-and the second Piola-Kirchhoff stress.
+Saint Venant-Kirchhoff hyperelasticity, the linear relation between the Green-Lagrange strain and the second
+Piola-Kirchhoff stress with the stored energy `W = λ/2 (tr E)² + μ E:E`. Build it from a property map carrying
+`"young"` and `"poisson"` (or `"lambda"` and `"mu"`).
 """
 SVKMaterial
 
 @doc """
+    YeohMaterial(C1, C2, C3, bulk, compressible::Bool)
     YeohMaterial(props::MaterialProperties)
 
-Yeoh hyperelasticity, an invariant-based rubber model.
+Yeoh hyperelasticity, `W = C1 (I₁ - 3) + C2 (I₁ - 3)² + C3 (I₁ - 3)³`. With `compressible = true`, `I₁` is replaced by
+`Ĩ₁ = J^(-2/3) I₁` and the volumetric term `bulk/2 (ln J)²` is added; otherwise `bulk` is not used.
+
+The `props` form uses `c1`, `c2`, `c3` and `bulk`; the key `compressible` enables the compressible form.
 """
 YeohMaterial
 
 @doc """
+    MooneyMaterial(α₀, α₁, α₂, incompressible::Bool = true)
     MooneyMaterial(props::MaterialProperties)
 
-Mooney-Rivlin hyperelasticity.
+Mooney-Rivlin hyperelasticity with the shear modulus `2α₁` and the bulk coefficient `α₀`. With `incompressible = true`
+the stored energy is `W = α₁ (I₁ - 3) + α₂ (I₂ - 3)` and `α₀` is not used. Otherwise
+`W = α₁ (Ĩ₁ - 3) + α₂ (Ĩ₂ - 3) + α₀/2 (J - 1)²`, with the invariants `Ĩ₁`, `Ĩ₂` of `J^(-2/3) C`.
+
+The `props` form uses `alpha0`, `alpha1` and `alpha2`; the key `incompressible` enables the incompressible form.
 """
 MooneyMaterial
 
 @doc """
+    ArrudaBoyceMaterial(C1, λm, bulk, compressible::Bool)
     ArrudaBoyceMaterial(props::MaterialProperties)
 
 Arruda-Boyce eight-chain hyperelasticity.
+
+The stored energy is a five-term series in the first invariant,
+`W = C1 Σᵢ αᵢ βⁱ⁻¹ (I₁ⁱ - 3ⁱ)` for `i = 1…5`, with `β = λm⁻²` and
+`α = (1/2, 1/20, 11/1050, 19/7000, 519/673750)`. `C1` is the initial shear stiffness and `λm` the locking stretch.
+With `compressible = true`, `I₁` is replaced by `Ĩ₁ = J^(-2/3) I₁` and the term `bulk/2 ((J² - 1)/2 - ln J)` is
+added; otherwise `bulk` is not used.
+
+The `props` form uses `c1`, `lambdam` and `bulk`; the key `compressible` enables the compressible form.
 """
 ArrudaBoyceMaterial
 
 @doc """
+    FplasticMaterial(E, ν, Hiso, Hkine, Y0, Yinf, Yexp, soft)
     FplasticMaterial(props::MaterialProperties)
 
-Finite strain plasticity.
+Finite strain von Mises plasticity with logarithmic (Hencky) elasticity, solved by a radial return in the principal
+Kirchhoff stresses.
+
+The yield function is `‖dev(τ) - Q‖ - √(2/3) (Y0 - q)` with the Kirchhoff stress `τ`, the kinematic hardening stress
+`Q` and the isotropic hardening stress `q = -K(α)`. `K(α) = Hiso α + (Yinf - Y0)(1 - exp(-Yexp α))` saturates at the
+yield stress `Yinf`, and `Hkine` is the linear kinematic hardening modulus. `soft` is a thermal softening coefficient:
+`Y0` and `Hiso` are scaled by `exp(-soft (θ - θref))` with the temperature `θ` of the material point.
+
+The `props` form uses `young`, `poisson`, `isotropich`, `kinematich`, `yieldstress`, `yieldinf`, `hardexp` and
+`softening`.
 """
 FplasticMaterial
 
@@ -586,13 +656,13 @@ ZerilliArmstrongMaterial
                            Hkine = 0.0, rho = 1.0, plasticity = "mises")
     ViscoplasticNLMaterial(props::MaterialProperties)
 
-Small strain viscoplasticity with nonlinear isotropic hardening (`Hiso`, `Hinf`, `H0`, `Hdelta`)
-and optional kinematic hardening `Hkine`. `eta` and `exponent` set the viscosity, `alpha` the
-time integration, and `plasticity` the yield criterion.
+Von Mises viscoplasticity with saturating isotropic hardening. The yield function is `‖dev(σ) - Q‖ - √(2/3) (yield - q)`
+with `q = -Hiso ξ - (Hinf - H0)(1 - exp(-Hdelta ξ))` and linear kinematic hardening `Hkine`. The plastic multiplier
+follows the overstress law `Δγ = 2μ Δt/eta (f/(2μ))^exponent`. `alpha` is the thermal expansion coefficient.
 
-The `props` form uses the keys `young`, `poisson`, `density`, `yieldstress`, `isotropich`,
-`isohardinf`, `isohardzero`, `isoharddelta`, `kinematich`, `eta`, `viscousexponent` and `alpha`,
-plus the string `"plasticity"` (see [`setString!`](@ref MuesliMaterials.setString!)).
+The `props` form uses the keys `young`, `poisson`, `density`, `yieldstress`, `isotropich`, `isohardinf`,
+`isohardzero`, `isoharddelta`, `kinematich`, `eta`, `viscousexponent` and `alpha`, plus the string `"plasticity"`
+(see [`setString!`](@ref MuesliMaterials.setString!)).
 """
 ViscoplasticNLMaterial
 
