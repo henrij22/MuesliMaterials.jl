@@ -23,7 +23,21 @@ MuesliMaterials.hasKeyword
 MuesliMaterials.check
 MuesliMaterials.print
 MuesliMaterials.createMaterialPoint
+MuesliMaterials.name
+```
+
+## Bulk properties
+
+Every material has a density and a reference temperature, and can be flagged for the variational
+formulation.
+
+```@docs
+MuesliMaterials.density
 MuesliMaterials.setDensity
+MuesliMaterials.referenceTemperature
+MuesliMaterials.setReferenceTemperature
+MuesliMaterials.isVariational
+MuesliMaterials.setVariational
 ```
 
 ## Small strain materials

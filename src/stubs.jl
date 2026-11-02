@@ -241,16 +241,54 @@ much later, when a stress evaluation returns nonsense.
 function check end
 
 @doc """
+    name(material)
+
+The name MUESLI knows the material by, e.g. `"NeoHooke"`.
+"""
+function name end
+
+@doc """
+    density(material)
+    density(mp)
+
+The mass density of a material, or of the material a material point was created from.
+"""
+function density end
+
+@doc """
     setDensity(material, ρ)
-    setReferenceTemperature(material, θ)
-    setVariational(material)
 
-Change a property every material has. `density` and `referenceTemperature` read them back,
-`isVariational` reports the flag, and `name` returns the name the material was created with.
-
-These change the material itself, so they also affect material points already created from it.
+Set the mass density. Material points already created from `material` see the new value.
 """
 function setDensity end
+
+@doc """
+    referenceTemperature(material)
+
+The reference temperature of the material.
+"""
+function referenceTemperature end
+
+@doc """
+    setReferenceTemperature(material, θ)
+
+Set the reference temperature. Material points already created from `material` see the new value.
+"""
+function setReferenceTemperature end
+
+@doc """
+    isVariational(material)
+
+Whether the material is flagged for the variational formulation, see [`setVariational`](@ref MuesliMaterials.setVariational).
+"""
+function isVariational end
+
+@doc """
+    setVariational(material)
+
+Flag the material for the variational formulation.
+"""
+function setVariational end
 
 @doc """
     print(material)
