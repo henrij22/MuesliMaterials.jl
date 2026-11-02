@@ -50,6 +50,7 @@ MuesliMaterials.ElasticTransverselyisotropicMaterial
 MuesliMaterials.SplasticMaterial
 MuesliMaterials.ViscoelasticMaterial
 MuesliMaterials.ViscoplasticMaterial
+ViscoplasticNLMaterial
 ```
 
 ### Damage models
@@ -70,6 +71,8 @@ YeohMaterial
 MuesliMaterials.MooneyMaterial
 MuesliMaterials.ArrudaBoyceMaterial
 MuesliMaterials.FplasticMaterial
+JohnsonCookMaterial
+ZerilliArmstrongMaterial
 ```
 
 ## Property names

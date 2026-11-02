@@ -237,3 +237,90 @@ end
     @test all(isfinite, first(stresses))
     @test length(junk) == 5000
 end
+
+@testitem "Finite strain: Johnson-Cook and Zerilli-Armstrong plasticity" begin
+    include("testutils.jl")
+
+    stretch(λ) = Diagonal3(λ, 1.0, 1.0)
+
+    function response(mat, MP, λ, t)
+        mp = MP(mat)
+        MuesliMaterials.updateCurrentState(mp, t, Itensor(stretch(λ)))
+        P = Itensor()
+        MuesliMaterials.firstPiolaKirchhoffStress!(mp, P)
+        return mat3(P)[1, 1], MuesliMaterials.plasticSlip(mp)
+    end
+
+    jc(T = 293.0) = JohnsonCookMaterial(;
+        E = 124.0e3, nu = 0.34, rho = 8.9e-9, A = 90.0, B = 292.0, C = 0.025, n = 0.31, m = 1.09,
+        edot0 = 1.0, T, Tref = 293.0, Tmelt = 1356.0
+    )
+    za(T = 293.0) = ZerilliArmstrongMaterial(;
+        E = 124.0e3, nu = 0.34, rho = 8.9e-9, C0 = 20.0, C1 = 0.0, C2 = 600.0, C3 = 0.005,
+        C4 = 0.0003, C5 = 0.0, n = 0.5, T
+    )
+
+    for (name, make, MP, temperatures) in (
+            ("Johnson-Cook", jc, JohnsonCookMP, (293.0, 600.0, 1000.0)),
+            ("Zerilli-Armstrong", za, ZerilliArmstrongMP, (200.0, 293.0, 500.0)),
+        )
+        @testset "$name" begin
+            mat = make()
+            @test MuesliMaterials.check(mat)
+            @test MuesliMaterials.density(mat) ≈ 8.9e-9
+            @test MP(mat) isa MP
+
+            @test response(mat, MP, 1.0001, 1.0)[2] == 0
+            @test response(mat, MP, 1.01, 1.0)[2] > 0
+
+            slow, medium, fast = (response(mat, MP, 1.05, t)[1] for t in (1.0e3, 1.0, 1.0e-3))
+            @test fast > medium > slow
+
+            cold, warm, hot = (response(make(T), MP, 1.05, 1.0)[1] for T in temperatures)
+            @test cold > warm > hot
+        end
+    end
+
+    @testset "the keyword constructor needs every model parameter" begin
+        @test_throws UndefKeywordError JohnsonCookMaterial(; E = 1.0, nu = 0.3)
+    end
+end
+
+@testitem "Reduced models: finite strain" begin
+    include("testutils.jl")
+
+    E, ν = 210.0e3, 0.3
+    props = properties("young" => E, "poisson" => ν)
+
+    @testset "bar with a Saint Venant-Kirchhoff material" begin
+        rmp = FbarMP(SVKMP(SVKMaterial(props)))
+        F = Itensor(Diagonal3(1.1, 1.0, 1.0))
+        MuesliMaterials.updateCurrentState!(rmp, 1.0, F)
+
+        S = Istensor()
+        MuesliMaterials.secondPiolaKirchhoffStress!(rmp, S)
+        @test S[1, 1] ≈ E * (1.1^2 - 1) / 2
+        @test all(abs(S[i, j]) < 1.0e-6 for (i, j) in ((2, 2), (3, 3), (2, 3), (1, 3), (1, 2)))
+        @test F[2, 2] ≈ F[3, 3] && F[2, 2] < 1
+
+        C = zeros(6, 6)
+        MuesliMaterials.convectedTangentMatrix!(rmp, C)
+        @test C[1, 1] ≈ E
+    end
+
+    @testset "shell, plane and beam" begin
+        Fr = [1.05 0.02 0.01; 0.01 0.97 0.02; 0.0 0.01 0.98]
+        for (R, zeroed) in (
+                (FshellMP, ((3, 3),)),
+                (FplaneMP, ((3, 3), (2, 3), (1, 3))),
+                (FbeamMP, ((1, 1), (2, 2), (1, 2))),
+            )
+            rmp = R(NeoHookeMP(NeoHookeMaterial(props)))
+            MuesliMaterials.updateCurrentState!(rmp, 1.0, Itensor(Fr))
+            S = Istensor()
+            MuesliMaterials.secondPiolaKirchhoffStress!(rmp, S)
+            @test all(abs(S[i, j]) < 1.0e-6 * E for (i, j) in zeroed)
+            @test rmp isa MuesliMaterials.ReducedFiniteStrainMP
+        end
+    end
+end

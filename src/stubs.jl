@@ -548,6 +548,92 @@ Finite strain plasticity.
 """
 FplasticMaterial
 
+@doc """
+    JohnsonCookMaterial(; E, nu, A, B, C, n, m, edot0, T, Tref, Tmelt, rho = 1.0)
+    JohnsonCookMaterial(props::MaterialProperties)
+
+Finite strain Johnson-Cook plasticity, with strain hardening, logarithmic rate dependence and
+thermal softening. Cumulative damage is not modelled.
+
+The yield stress is
+
+    σ_y = √(2/3) (A + B εᵖⁿ) (1 + C ln(ε̇ᵖ / ε̇₀)) (1 - ((T - Tref) / (Tmelt - Tref))ᵐ)
+
+with the equivalent plastic strain `εᵖ` and its rate `ε̇ᵖ`.
+
+# Keywords
+- `E`, `nu`, `rho`: Young's modulus, Poisson's ratio and density
+- `A`, `B`, `n`: initial yield stress, hardening modulus and hardening exponent
+- `C`, `edot0`: strain rate sensitivity and reference strain rate
+- `m`, `Tref`, `Tmelt`: thermal softening exponent, reference and melting temperature
+- `T`: the temperature of the material
+
+# Details
+The temperature is a property of the material, not of the point: `setTemperature` on a
+point has no effect on the response. Build one material per temperature.
+
+The `props` form uses the MUESLI keys `young`, `poisson`, `density`, `a`, `b`, `c`, `n`, `m`,
+`edot0`, `temp`, `modelreftemp` and `melttemp`. MUESLI's positional constructors are not exposed
+because they are broken: one ignores the melting temperature, the other overwrites `edot0`.
+
+# Examples
+```julia
+mat = JohnsonCookMaterial(;
+    E = 124e3, nu = 0.34, rho = 8.9e-9, A = 90.0, B = 292.0, C = 0.025, n = 0.31, m = 1.09,
+    edot0 = 1.0, T = 293.0, Tref = 293.0, Tmelt = 1356.0,
+)
+mp = JohnsonCookMP(mat)
+```
+
+# See Also
+- [`ZerilliArmstrongMaterial`](@ref)
+"""
+JohnsonCookMaterial
+
+@doc """
+    ZerilliArmstrongMaterial(; E, nu, C0, C1, C2, C3, C4, C5, n, T, a1 = 1.0, b1 = 1.0, rho = 1.0)
+    ZerilliArmstrongMaterial(props::MaterialProperties)
+
+Finite strain Zerilli-Armstrong plasticity: a thermally activated, rate and temperature
+dependent flow stress.
+
+The yield stress is
+
+    σ_y = √(2/3) [(C1 + C2 √εᵖ) exp(-C3 T + C4 T ln ε̇ᵖ) + C5 εᵖⁿ + C0]
+
+with the equivalent plastic strain `εᵖ` and its rate `ε̇ᵖ`. `a1` and `b1` scale it with an ageing
+parameter; their defaults leave the flow stress unchanged.
+
+# Details
+As for [`JohnsonCookMaterial`](@ref), the temperature `T` belongs to the material.
+
+The `props` form uses the MUESLI keys `young`, `poisson`, `density`, `c0` to `c5`, `n`, `temp`,
+`a1` and `b1`.
+"""
+ZerilliArmstrongMaterial
+
+@doc """
+    ViscoplasticNLMaterial(; E, nu, yield, Hiso, Hinf, H0, Hdelta, eta, exponent, alpha,
+                           Hkine = 0.0, rho = 1.0, plasticity = "mises")
+    ViscoplasticNLMaterial(props::MaterialProperties)
+
+Small strain viscoplasticity with nonlinear isotropic hardening and optional kinematic hardening.
+
+# Keywords
+- `E`, `nu`, `rho`: Young's modulus, Poisson's ratio and density
+- `yield`: initial yield stress
+- `Hiso`, `Hinf`, `H0`, `Hdelta`: the isotropic hardening law
+- `Hkine`: kinematic hardening modulus
+- `eta`, `exponent`: viscosity and viscous exponent
+- `alpha`: integration parameter of the time stepping
+- `plasticity`: the yield criterion, as a MUESLI keyword
+
+The `props` form uses the MUESLI keys `young`, `poisson`, `density`, `yieldstress`, `isotropich`,
+`isohardinf`, `isohardzero`, `isoharddelta`, `kinematich`, `eta`, `viscousexponent` and `alpha`, and
+the string `"plasticity"`; see [`setString!`](@ref MuesliMaterials.setString!).
+"""
+ViscoplasticNLMaterial
+
 # ---------------------------------------------------------------------------------------
 # Material points
 # ---------------------------------------------------------------------------------------
@@ -964,3 +1050,140 @@ function getDamage end
 Whether the material point has reached full damage.
 """
 function isFullyDamaged end
+
+@doc """
+    JohnsonCookMP(material::JohnsonCookMaterial)
+
+The material point of a [`JohnsonCookMaterial`](@ref). Takes the deformation gradient.
+"""
+JohnsonCookMP
+
+@doc """
+    ZerilliArmstrongMP(material::ZerilliArmstrongMaterial)
+
+The material point of a [`ZerilliArmstrongMaterial`](@ref). Takes the deformation gradient.
+"""
+ZerilliArmstrongMP
+
+@doc """
+    ViscoplasticNLMP(material::ViscoplasticNLMaterial)
+
+The material point of a [`ViscoplasticNLMaterial`](@ref). Takes the linearised strain.
+"""
+ViscoplasticNLMP
+
+# ---------------------------------------------------------------------------------------
+# Reduced models
+# ---------------------------------------------------------------------------------------
+
+@doc """
+    SbarMP(point::SmallStrainMP, method = "nr")
+    SbeamMP(point::SmallStrainMP, method = "nr")
+    SshellMP(point::SmallStrainMP, method = "nr")
+    SplaneMP(point::SmallStrainMP, method = "nr")
+    FbarMP(point::FiniteStrainMP, method = "nr")
+    FbeamMP(point::FiniteStrainMP, method = "nr")
+    FshellMP(point::FiniteStrainMP, method = "nr")
+    FplaneMP(point::FiniteStrainMP, method = "nr")
+
+Reduced material points: a bar, beam, shell or plane stress model on top of a 3D material point.
+
+An element that controls only part of the strain prescribes those *master* components. The
+reduced point solves for the remaining strain components such that their stress is zero, and
+returns a tangent condensed onto the master components,
+
+    C* = C_mm - C_mz C_zz⁻¹ C_zm.
+
+| Model | Master components | Zero stress | Use |
+| :-- | :-- | :-- | :-- |
+| `Sbar`, `Fbar` | 11 | 22, 33, 23, 13, 12 | uniaxial stress |
+| `Sbeam`, `Fbeam` | 33, 23, 13 | 11, 22, 12 | beam along axis 3 |
+| `Sshell`, `Fshell` | 11, 22, 23, 13, 12 | 33 | shell: plane stress with transverse shear |
+| `Splane`, `Fplane` | 11, 22, 12 | 33, 23, 13 | plane stress |
+
+The `S` models work with the linearised strain and the Cauchy stress. The `F` models work with the
+Green-Lagrange strain `E = (FᵀF - I)/2` and the second Piola-Kirchhoff stress, and take the
+deformation gradient.
+
+# Arguments
+- `point`: the 3D material point, of any material of the matching family
+- `method`: `"nr"` for Newton-Raphson, or `"nlcg"` for a nonlinear conjugate gradient solver,
+  which is slower but more robust for plasticity
+
+# Details
+Components are numbered in Voigt order `[11, 22, 33, 23, 13, 12]`. The 6 × 6 matrices are the
+*engineering* tangent, `dS = C dE` with the engineering shear strain `γ = 2ε`, and are non-zero
+only on the master block.
+
+[`updateCurrentState!`](@ref MuesliMaterials.updateCurrentState!) **overwrites** its strain or
+deformation gradient argument with the full 3D one, the solved components included.
+
+The reduced point works on the 3D point you pass in, so the 3D point holds the state. It keeps that
+point, and with it the material, alive.
+
+# Examples
+```julia
+mat = ElasticIsotropicMaterial(210e3, 0.3)
+mp = SplaneMP(ElasticIsotropicMP(mat))
+
+ε = Istensor([1e-3 0.0 0.0; 0.0 0.0 0.0; 0.0 0.0 0.0])
+MuesliMaterials.updateCurrentState!(mp, 1.0, ε)
+ε[3, 3]                           # -ν / (1 - ν) * ε₁₁, solved for
+
+C = zeros(6, 6)
+MuesliMaterials.tangentMatrix!(mp, C)
+C[1, 1]                           # E / (1 - ν²)
+```
+
+# References
+- Klinkel, Govindjee (2002), Using finite strain 3D-material models in beam and shell elements,
+  Engineering Computations 19, 902-921.
+- Portillo, Oesterle, Thierer, Bischoff, Romero (2020), Structural models based on 3D constitutive
+  laws: Variational structure and numerical solution, Comput. Methods Appl. Mech. Eng. 362, 112872.
+
+# See Also
+- [`MuesliMaterials.ReducedSmallStrainMP`](@ref), [`MuesliMaterials.ReducedFiniteStrainMP`](@ref)
+"""
+SbarMP
+
+@doc """
+    ReducedSmallStrainMP
+
+Supertype of [`SbarMP`](@ref), `SbeamMP`, `SshellMP` and `SplaneMP`. The methods
+[`stress!`](@ref MuesliMaterials.stress!), [`tangentMatrix!`](@ref MuesliMaterials.tangentMatrix!),
+[`storedEnergy`](@ref MuesliMaterials.storedEnergy),
+[`commitCurrentState`](@ref MuesliMaterials.commitCurrentState) and
+[`resetCurrentState`](@ref MuesliMaterials.resetCurrentState) work on them as on any small strain
+point; `getCurrentStrain(mp)` returns the full strain.
+"""
+ReducedSmallStrainMP
+
+@doc """
+    ReducedFiniteStrainMP
+
+Supertype of [`FbarMP`](@ref SbarMP), `FbeamMP`, `FshellMP` and `FplaneMP`. Stresses are read with
+the same functions as on a finite strain point, such as
+[`secondPiolaKirchhoffStress!`](@ref MuesliMaterials.secondPiolaKirchhoffStress!); the tangent comes
+from [`convectedTangentMatrix!`](@ref MuesliMaterials.convectedTangentMatrix!).
+"""
+ReducedFiniteStrainMP
+
+@doc """
+    updateCurrentState!(mp, t::Real, strain::Istensor)
+    updateCurrentState!(mp, t::Real, F::Itensor)
+
+Set the trial state of a reduced point at time `t`, and overwrite the argument with the full 3D
+strain or deformation gradient, including the components the point solved for.
+
+On entry only the master components matter.
+"""
+function updateCurrentState! end
+
+@doc """
+    convectedTangentMatrix!(mp, C::AbstractMatrix)
+
+Fill the 6 × 6 matrix `C` with the condensed convected tangent of a reduced finite strain point,
+in Voigt order `[11, 22, 33, 23, 13, 12]`. It is the engineering tangent, non-zero only on the
+master block.
+"""
+function convectedTangentMatrix! end

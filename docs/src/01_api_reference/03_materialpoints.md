@@ -11,6 +11,9 @@ ElasticIsotropicMP
 NeoHookeMP
 SVKMP
 YeohMP
+JohnsonCookMP
+ZerilliArmstrongMP
+ViscoplasticNLMP
 ```
 
 Every material has a matching point type, named the same way
@@ -92,4 +95,18 @@ MuesliMaterials.getCurrentPlasticStrain
 MuesliMaterials.getConvergedPlasticStrain
 MuesliMaterials.getDamage
 MuesliMaterials.isFullyDamaged
+```
+
+## Reduced models
+
+A bar, beam, shell or plane stress model on top of a 3D material point. The tables of master
+and zero-stress components, the Voigt convention and the solvers are documented with
+[`SbarMP`](@ref).
+
+```@docs
+SbarMP
+MuesliMaterials.ReducedSmallStrainMP
+MuesliMaterials.ReducedFiniteStrainMP
+MuesliMaterials.updateCurrentState!
+MuesliMaterials.convectedTangentMatrix!
 ```
