@@ -1,11 +1,23 @@
-# MuesliMaterials.jl
+<h1 align="center">MuesliMaterials.jl</h1>
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://henrij22.github.io/MuesliMaterials.jl/dev/)
+<p align="center">
+  <strong>Julia bindings for the <a href="https://materials.imdea.org/muesli/">MUESLI</a> material library</strong>
+</p>
 
-[![Build Status](https://github.com/henrij22/Muesli.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/henrij22/Muesli.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/henrij22/MuesliMaterials.jl/graph/badge.svg?token=O5JKOFDWX1)](https://codecov.io/gh/henrij22/MuesliMaterials.jl)
-[![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
-[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+<p align="center">
+  <a href="https://henrij22.github.io/MuesliMaterials.jl/dev"><img src="https://img.shields.io/badge/docs-dev-blue.svg" alt="Docs dev"></a>
+  <a href="https://github.com/henrij22/MuesliMaterials.jl/actions/workflows/CI.yml"><img src="https://github.com/henrij22/MuesliMaterials.jl/actions/workflows/CI.yml/badge.svg" alt="Build status"></a>
+  <a href="https://codecov.io/gh/henrij22/MuesliMaterials.jl"><img src="https://codecov.io/gh/henrij22/MuesliMaterials.jl/graph/badge.svg?token=O5JKOFDWX1" alt="codecov"></a>
+  <a href="https://github.com/JuliaTesting/Aqua.jl"><img src="https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg" alt="Aqua QA"></a>
+  <a href="https://github.com/fredrikekre/Runic.jl"><img src="https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black" alt="Code style: Runic"></a>
+</p>
+
+<p align="center">
+  <a href="#bindings">Bindings</a> ·
+  <a href="#documentation">Documentation</a>
+</p>
+
+---
 
 This is a wrapper for the Julia Programming Language of the MUESLI library (Material UnivErSal LIbrary), a C++ library for modeling material response, developed at IMDEA Materials Institute, Madrid (Spain). See [Homepage](https://materials.imdea.org/muesli/) and [Repo](https://bitbucket.org/ignromero/muesli/src/master/).
 The developer of this wrapper library is not affiliated with IMDEA in any form.
