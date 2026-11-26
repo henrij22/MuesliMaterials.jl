@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="#installation">Installation</a> ·
   <a href="#bindings">Bindings</a> ·
   <a href="#documentation">Documentation</a>
 </p>
@@ -21,6 +22,25 @@
 
 This is a wrapper for the Julia Programming Language of the MUESLI library (Material UnivErSal LIbrary), a C++ library for modeling material response, developed at IMDEA Materials Institute, Madrid (Spain). See [Homepage](https://materials.imdea.org/muesli/) and [Repo](https://bitbucket.org/ignromero/muesli/src/master/).
 The developer of this wrapper library is not affiliated with IMDEA in any form.
+
+## Installation
+
+MuesliMaterials.jl is **not registered** in the Julia General registry. The package and its binary
+dependency `MuesliMaterialsWrapper_jll` are available through my Julia registry, which is the
+recommended way to install it:
+
+1. Add my registry:
+
+```julia
+using Pkg
+pkg"registry add https://github.com/henrij22/JuliaRegistry"
+```
+
+2. Install MuesliMaterials:
+
+```julia
+pkg"add MuesliMaterials"
+```
 
 ## Bindings
 
